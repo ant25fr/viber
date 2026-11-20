@@ -9,6 +9,12 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, l
   <img src="https://img.shields.io/badge/hardware-M--VAVE%20FM--1%20%7C%20SMK--37%20Pro-555" alt="Hardware: M-VAVE FM-1 | SMK-37 Pro">
 </p>
 
+## Install and try
+
+- **[Web installer](https://ant25fr.github.io/viber/webapp/installer/)**: installs Viber on an FM-1 from the browser (WebUSB), and brings the official firmware back.
+- **[Editor](https://ant25fr.github.io/viber/webapp/editor/)** and **[emulator](https://ant25fr.github.io/viber/try/)**: edit the unit from a computer, or try Viber in the browser.
+- The package is `viber-1.0.fwsc` (identity `FM-1_950`), attached to the [releases](https://github.com/ant25fr/viber/releases).
+
 ## What Viber adds
 
 - **Wavetable engine (WAVE)**: 8 tables of 16 single-cycle frames, scanned with TABLE, with WAVE, SUB and DETUNE; the screen draws the table as a 3D stack with the current frame highlighted.
