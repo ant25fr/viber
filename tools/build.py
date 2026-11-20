@@ -6,7 +6,7 @@
   tools/build.py [--release X.Y[-suffix]] [--console] [--board fm1|smk37] [--model pro|elite|mke]
 
 Outputs in build/: felucca.bin (app), loader/ota.bin (update loader),
-felucca.fwsc (package). A release build (--release X.Y) writes skiff-X.Y.fwsc and a folder
+felucca.fwsc (package). A release build (--release X.Y) writes viber-X.Y.fwsc and a folder
 release-X.Y/ with the package, the app, SHA256SUMS, the samples' attributions and the licence files.
 Every build leaves the serial console out ((Skiff 2.0) a release's, (2.7) every one's: FELUCCA_CDC=0), so the unit
 is a plain audio + MIDI device (macOS 13-15 see its USB audio input) and MENU has no USB SERIAL. --console (a
@@ -69,7 +69,8 @@ BOARD = "fm1"                       # fm1 (default) or smk37: BOARD env or --boa
 BOARD_PRODUCT = {"fm1": "FM-1_700", "smk37": "SMK-37 Pro_700"}   # a dev build's identity
 BOARD_PREFIX = {"fm1": "FM-1_7", "smk37": "SMK-37 Pro_7"}        # a release build's: prefix + X + Y
 BOARD_DEFS = {"fm1": [], "smk37": ["-DBOARD_SMK37=1"]}           # the FM-1 build gets no new flag (byte-identical)
-BOARD_STEM = {"fm1": "skiff", "smk37": "skiff-smk37"}            # a release package: STEM-X.Y.fwsc
+BOARD_STEM = {"fm1": "viber", "smk37": "skiff-smk37"}            # a release package: STEM-X.Y.fwsc
+VIBER_RELEASE_PRODUCT = "FM-1_950"  # Viber's own identity on the FM-1, whatever X.Y a release has
 # smk37: the keyboard's model name (MODEL env or --model); one hardware, three names. pro adds no flag
 MODELS = {"pro": "SMK-37 Pro", "elite": "SMK-37 Elite", "mke": "MKE-P37"}
 VERSION = None                      # FELUCCA_VERSION for release builds (default: firmware/src/felucca.c)
@@ -407,7 +408,7 @@ def main():
         m = re.fullmatch(r"(\d)\.(\d)(?:\.\d){0,2}(-[A-Za-z0-9]+)?", a.release)
         if not m:
             raise SystemExit(f"--release {a.release}: use X.Y, X.Y.Z, X.Y.Z.W or X.Y-suffix, one digit each")
-        PRODUCT = BOARD_PREFIX[BOARD] + m[1] + m[2]
+        PRODUCT = VIBER_RELEASE_PRODUCT if BOARD == "fm1" and model == "pro" else BOARD_PREFIX[BOARD] + m[1] + m[2]
         VERSION = "v" + a.release.lower()      # e.g. v1.0, v1.1-rc1
         name = f"{stem}-{a.release}.fwsc"
     if a.console:                   # (2.7) the console in, the cast out: the FM-1's app fits (see the top)
