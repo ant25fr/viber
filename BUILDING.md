@@ -43,7 +43,7 @@ On Linux x86-64 the toolchain runs natively and Docker is not needed.
 `JIELI_TOOLCHAIN` and `AC79_SDK` override the default locations
 (`~/.jieli/toolchain`, `~/fw-AC79_AIoT_SDK`).
 
-`./build.sh --release 1.2` makes a release build: the package identity becomes `FM-1_58010000` (Viber's own)
+`./build.sh --release 1.2` makes a release build: the package identity becomes `FM-1_2507010000` (Viber's own)
 (Skiff's 7XY; Felucca's are 9XY) and the version string `v1.2`; the package is `build/viber-1.0.fwsc`, and
 `build/release-1.2/` holds what a release ships: the package, the app
 (`skiff-1.2-app.bin`), `SHA256SUMS`, the samples' attributions (`ATTRIBUTION.txt` for the CC0 sets,
