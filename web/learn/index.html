@@ -1,14 +1,14 @@
 <!doctype html>
 <!-- SPDX-License-Identifier: GPL-3.0-only
-     Skiff: Learn Skiff, the manual in chapters, each with a video made from the firmware itself. One page: every
+     Viber: Learn Viber, the manual in chapters, each with a video made from the firmware itself. One page: every
      chapter is here (Ctrl+F is the search; #chapter and #chapter/step are the links). steps.js (written from the
      captures) gives each step its time in the video and the controls it uses. -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Learn Skiff</title>
-<meta name="description" content="Learn Skiff, the six-track groovebox firmware for the M-VAVE FM-1: a manual in 21 chapters, each with a video showing every press on the unit.">
+<title>Learn Viber</title>
+<meta name="description" content="Learn Viber, the six-track groovebox firmware for the M-VAVE FM-1: a manual in 21 chapters, each with a video showing every press on the unit.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%23111%22/%3E%3Crect x=%223%22 y=%229%22 width=%223%22 height=%224%22 fill=%22%23ff5a36%22/%3E%3Crect x=%227%22 y=%226%22 width=%223%22 height=%227%22 fill=%22%2322c3b4%22/%3E%3Crect x=%2211%22 y=%223%22 width=%223%22 height=%2210%22 fill=%22%23ffbf00%22/%3E%3C/svg%3E">
 <style>
 @font-face { font-family: "Barlow Condensed"; src: url("../fonts/BarlowCondensed-Medium.ttf") format("truetype"); font-weight: 500; font-display: swap; }
@@ -99,7 +99,7 @@ main { padding: 32px 0 80px; min-width: 0; }
 .device .screen { position: absolute; image-rendering: pixelated; background: var(--keycap); }
 .where .legend i.h { box-shadow: inset 0 0 0 3px var(--lit); }
 
-/* following along on Try Skiff (../try/, the firmware in the browser): on a wide screen it docks here, in the drawing's
+/* following along on Try Viber (../try/, the firmware in the browser): on a wide screen it docks here, in the drawing's
  * place, its own layout for a phone held upright (the screen near 1:1); on a phone the link opens it in a tab */
 .follow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin: 14px 0 0; }
 .follow .go { font-size: 17px; padding: 10px 14px 8px; }
@@ -215,14 +215,14 @@ footer p { max-width: 1240px; margin: 6px auto; }
 <header class="hero" id="top">
   <div class="wrap">
     <div class="bar">
-      <a href="#top" aria-label="Skiff"><svg class="logo" id="logo" viewBox="0 0 846 200" role="img" aria-label="Skiff"><rect x="0" y="176" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="0" y="154" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="0" y="132" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="0" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="22" y="176" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="22" y="154" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="22" y="132" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="22" y="110" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="44" y="176" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="44" y="154" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="44" y="132" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="44" y="110" width="18" height="18" rx="3" fill="#ff5a36"/><rect x="66" y="176" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="66" y="154" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="66" y="132" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="66" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="88" y="176" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="88" y="154" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="88" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="88" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="110" y="176" width="18" height="18" rx="3" fill="#22c3b4"/><rect x="110" y="154" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="110" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="110" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="132" y="176" width="18" height="18" rx="3" fill="#ffbf00"/><rect x="132" y="154" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="132" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="132" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="154" y="176" width="18" height="18" rx="3" fill="#ffbf00"/><rect x="154" y="154" width="18" height="18" rx="3" fill="#ffbf00"/><rect x="154" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="154" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="176" y="176" width="18" height="18" rx="3" fill="#9580ff"/><rect x="176" y="154" width="18" height="18" rx="3" fill="#9580ff"/><rect x="176" y="132" width="18" height="18" rx="3" fill="#9580ff"/><rect x="176" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="198" y="176" width="18" height="18" rx="3" fill="#9580ff"/><rect x="198" y="154" width="18" height="18" rx="3" fill="#9580ff"/><rect x="198" y="132" width="18" height="18" rx="3" fill="#9580ff"/><rect x="198" y="110" width="18" height="18" rx="3" fill="#9580ff"/><rect x="220" y="176" width="18" height="18" rx="3" fill="#9580ff"/><rect x="220" y="154" width="18" height="18" rx="3" fill="#9580ff"/><rect x="220" y="132" width="18" height="18" rx="3" fill="#9580ff"/><rect x="220" y="110" width="18" height="18" rx="3" fill="#9580ff"/><rect x="242" y="176" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="242" y="154" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="242" y="132" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="242" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="264" y="176" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="264" y="154" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="264" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="264" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="286" y="176" width="18" height="18" rx="3" fill="#ff6fae"/><rect x="286" y="154" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="286" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="286" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="308" y="176" width="18" height="18" rx="3" fill="#a3e635"/><rect x="308" y="154" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="308" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="308" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="330" y="176" width="18" height="18" rx="3" fill="#a3e635"/><rect x="330" y="154" width="18" height="18" rx="3" fill="#a3e635"/><rect x="330" y="132" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="330" y="110" width="18" height="18" rx="3" fill="#2c2c2c"/><rect x="316" y="68" width="10" height="10" fill="#ffffff"/><rect x="176" y="78" width="10" height="10" fill="#ffffff"/><rect x="186" y="78" width="10" height="10" fill="#ffffff"/><rect x="196" y="78" width="10" height="10" fill="#ffffff"/><rect x="206" y="78" width="10" height="10" fill="#ffffff"/><rect x="216" y="78" width="10" height="10" fill="#ffffff"/><rect x="226" y="78" width="10" height="10" fill="#ffffff"/><rect x="236" y="78" width="10" height="10" fill="#ffffff"/><rect x="246" y="78" width="10" height="10" fill="#ffffff"/><rect x="256" y="78" width="10" height="10" fill="#ffffff"/><rect x="266" y="78" width="10" height="10" fill="#ffffff"/><rect x="276" y="78" width="10" height="10" fill="#ffffff"/><rect x="286" y="78" width="10" height="10" fill="#ffffff"/><rect x="296" y="78" width="10" height="10" fill="#ffffff"/><rect x="306" y="78" width="10" height="10" fill="#ffffff"/><rect x="186" y="88" width="10" height="10" fill="#ffffff"/><rect x="196" y="88" width="10" height="10" fill="#ffffff"/><rect x="206" y="88" width="10" height="10" fill="#ffffff"/><rect x="216" y="88" width="10" height="10" fill="#ffffff"/><rect x="226" y="88" width="10" height="10" fill="#ffffff"/><rect x="236" y="88" width="10" height="10" fill="#ffffff"/><rect x="246" y="88" width="10" height="10" fill="#ffffff"/><rect x="256" y="88" width="10" height="10" fill="#ffffff"/><rect x="266" y="88" width="10" height="10" fill="#ffffff"/><rect x="276" y="88" width="10" height="10" fill="#ffffff"/><rect x="286" y="88" width="10" height="10" fill="#ffffff"/><rect x="296" y="88" width="10" height="10" fill="#ffffff"/><rect x="196" y="98" width="10" height="10" fill="#ffffff"/><rect x="206" y="98" width="10" height="10" fill="#ffffff"/><rect x="216" y="98" width="10" height="10" fill="#ffffff"/><rect x="226" y="98" width="10" height="10" fill="#ffffff"/><rect x="236" y="98" width="10" height="10" fill="#ffffff"/><rect x="246" y="98" width="10" height="10" fill="#ffffff"/><rect x="256" y="98" width="10" height="10" fill="#ffffff"/><rect x="266" y="98" width="10" height="10" fill="#ffffff"/><rect x="276" y="98" width="10" height="10" fill="#ffffff"/><rect x="286" y="98" width="10" height="10" fill="#ffffff"/><rect x="396" y="58" width="16" height="16" fill="#ffffff"/><rect x="412" y="58" width="16" height="16" fill="#ffffff"/><rect x="428" y="58" width="16" height="16" fill="#ffffff"/><rect x="444" y="58" width="16" height="16" fill="#ffffff"/><rect x="380" y="74" width="16" height="16" fill="#ffffff"/><rect x="380" y="90" width="16" height="16" fill="#ffffff"/><rect x="396" y="106" width="16" height="16" fill="#ffffff"/><rect x="412" y="106" width="16" height="16" fill="#ffffff"/><rect x="428" y="106" width="16" height="16" fill="#ffffff"/><rect x="444" y="122" width="16" height="16" fill="#ffffff"/><rect x="444" y="138" width="16" height="16" fill="#ffffff"/><rect x="380" y="154" width="16" height="16" fill="#ffffff"/><rect x="396" y="154" width="16" height="16" fill="#ffffff"/><rect x="412" y="154" width="16" height="16" fill="#ffffff"/><rect x="428" y="154" width="16" height="16" fill="#ffffff"/><rect x="476" y="58" width="16" height="16" fill="#ffffff"/><rect x="540" y="58" width="16" height="16" fill="#ffffff"/><rect x="476" y="74" width="16" height="16" fill="#ffffff"/><rect x="524" y="74" width="16" height="16" fill="#ffffff"/><rect x="476" y="90" width="16" height="16" fill="#ffffff"/><rect x="508" y="90" width="16" height="16" fill="#ffffff"/><rect x="476" y="106" width="16" height="16" fill="#ffffff"/><rect x="492" y="106" width="16" height="16" fill="#ffffff"/><rect x="476" y="122" width="16" height="16" fill="#ffffff"/><rect x="508" y="122" width="16" height="16" fill="#ffffff"/><rect x="476" y="138" width="16" height="16" fill="#ffffff"/><rect x="524" y="138" width="16" height="16" fill="#ffffff"/><rect x="476" y="154" width="16" height="16" fill="#ffffff"/><rect x="540" y="154" width="16" height="16" fill="#ffffff"/><rect x="572" y="58" width="16" height="16" fill="#ffffff"/><rect x="588" y="58" width="16" height="16" fill="#ffffff"/><rect x="604" y="58" width="16" height="16" fill="#ffffff"/><rect x="620" y="58" width="16" height="16" fill="#ffffff"/><rect x="636" y="58" width="16" height="16" fill="#ffffff"/><rect x="604" y="74" width="16" height="16" fill="#ffffff"/><rect x="604" y="90" width="16" height="16" fill="#ffffff"/><rect x="604" y="106" width="16" height="16" fill="#ffffff"/><rect x="604" y="122" width="16" height="16" fill="#ffffff"/><rect x="604" y="138" width="16" height="16" fill="#ffffff"/><rect x="572" y="154" width="16" height="16" fill="#ffffff"/><rect x="588" y="154" width="16" height="16" fill="#ffffff"/><rect x="604" y="154" width="16" height="16" fill="#ffffff"/><rect x="620" y="154" width="16" height="16" fill="#ffffff"/><rect x="636" y="154" width="16" height="16" fill="#ffffff"/><rect x="668" y="58" width="16" height="16" fill="#ffffff"/><rect x="684" y="58" width="16" height="16" fill="#ffffff"/><rect x="700" y="58" width="16" height="16" fill="#ffffff"/><rect x="716" y="58" width="16" height="16" fill="#ffffff"/><rect x="732" y="58" width="16" height="16" fill="#ffffff"/><rect x="668" y="74" width="16" height="16" fill="#ffffff"/><rect x="668" y="90" width="16" height="16" fill="#ffffff"/><rect x="668" y="106" width="16" height="16" fill="#ffffff"/><rect x="684" y="106" width="16" height="16" fill="#ffffff"/><rect x="700" y="106" width="16" height="16" fill="#ffffff"/><rect x="716" y="106" width="16" height="16" fill="#ffffff"/><rect x="668" y="122" width="16" height="16" fill="#ffffff"/><rect x="668" y="138" width="16" height="16" fill="#ffffff"/><rect x="668" y="154" width="16" height="16" fill="#ffffff"/><rect x="764" y="58" width="16" height="16" fill="#ffffff"/><rect x="780" y="58" width="16" height="16" fill="#ffffff"/><rect x="796" y="58" width="16" height="16" fill="#ffffff"/><rect x="812" y="58" width="16" height="16" fill="#ffffff"/><rect x="828" y="58" width="16" height="16" fill="#ffffff"/><rect x="764" y="74" width="16" height="16" fill="#ffffff"/><rect x="764" y="90" width="16" height="16" fill="#ffffff"/><rect x="764" y="106" width="16" height="16" fill="#ffffff"/><rect x="780" y="106" width="16" height="16" fill="#ffffff"/><rect x="796" y="106" width="16" height="16" fill="#ffffff"/><rect x="812" y="106" width="16" height="16" fill="#ffffff"/><rect x="764" y="122" width="16" height="16" fill="#ffffff"/><rect x="764" y="138" width="16" height="16" fill="#ffffff"/><rect x="764" y="154" width="16" height="16" fill="#ffffff"/></svg></a>
-      <nav class="links" aria-label="Skiff"><a href="../webapp/installer/">Install</a><a href="../webapp/editor/">Editor</a><a href="../try/">Try Skiff</a><a href="https://github.com/illuminus5/skiff">GitHub</a></nav>
+      <a href="#top" aria-label="Viber"><svg class="logo" id="logo" viewBox="0 0 560 200" role="img" aria-label="Viber"><polygon points="0,10 42,10 96,176 74,176" fill="#eceaf0"/><polygon points="150,10 108,10 74,176 96,176" fill="#4fd1ff"/><text x="190" y="150" font-family="Barlow Condensed, Inter Tight, sans-serif" font-weight="700" font-size="150" fill="currentColor" letter-spacing="6">VIBER</text></svg></a>
+      <nav class="links" aria-label="Viber"><a href="../webapp/installer/">Install</a><a href="../webapp/editor/">Editor</a><a href="../try/">Try Viber</a><a href="https://github.com/ant25fr/viber">GitHub</a></nav>
     </div>
-    <h1>Learn Skiff</h1>
-    <p class="lede">The manual for Skiff, the six-track groovebox firmware for the M-VAVE FM-1, in 21 chapters. Each chapter has a short
+    <h1>Learn Viber</h1>
+    <p class="lede">The manual for Viber, the six-track groovebox firmware for the M-VAVE FM-1 (based on Skiff and Felucca, by Anto), in 21 chapters. Each chapter has a short
       video that shows every press, hold and turn on the unit, made from the firmware itself. Play it and the steps below
       follow along. New to grooveboxes? Start at chapter 1 and read on. Know your way around? Jump to any chapter.
-      No unit at hand? <a href="../try/">Try Skiff</a> runs the same firmware in your browser, and on a wide screen
+      No unit at hand? <a href="../try/">Try Viber</a> runs the same firmware in your browser, and on a wide screen
       Follow along docks it beside the steps.</p>
     <a class="go" href="#install">Start here</a>
     <div class="groups" id="groups"></div>
@@ -235,31 +235,31 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <!-- ================================================================ START HERE -->
 <section class="chapter" id="install" data-n="1" data-group="START HERE" data-video="eW7PnfJCWbQ">
-  <div class="ch-head"><span class="num">01</span><div><p class="group">START HERE</p><h2>Install Skiff</h2></div></div>
-  <p class="meta"><b>You'll need</b> an FM-1, a USB data cable, and Chrome or Edge on a computer. <b>You'll learn</b> how to put Skiff
+  <div class="ch-head"><span class="num">01</span><div><p class="group">START HERE</p><h2>Install Viber</h2></div></div>
+  <p class="meta"><b>You'll need</b> an FM-1, a USB data cable, and Chrome or Edge on a computer. <b>You'll learn</b> how to put Viber
     on the unit, update it, what to do when an install stops, and how to go back to the official firmware. <b>At your own risk:</b>
-    Skiff is custom firmware, free and without warranty.</p>
+    Viber is custom firmware, free and without warranty.</p>
   <div class="video"></div>
   <ol class="steps">
     <li class="step" id="install/skiff">
-      <h3>Skiff on the FM-1</h3>
-      <p>Skiff is free firmware for the M-VAVE FM-1 (GPL-3.0) that turns it into a six-track groovebox: synths and drums, patterns and
+      <h3>Viber on the FM-1</h3>
+      <p>Viber is free firmware for the M-VAVE FM-1 (GPL-3.0) that turns it into a six-track groovebox: synths and drums, patterns and
         songs. Here it plays the beat you make in <a href="#first-beat">chapter 3</a>: <kbd>PLAY</kbd> starts it and stops it.</p>
-      <p>This chapter puts Skiff on your unit from the browser, and shows the way back to the official firmware, M-VAVE's V15.</p>
+      <p>This chapter puts Viber on your unit from the browser, and shows the way back to the official firmware, M-VAVE's V15.</p>
     </li>
     <li class="step" id="install/try">
       <h3>Try it first</h3>
-      <p><a href="../try/">Try Skiff</a> runs the same firmware in the browser, on a drawn FM-1: press Switch on, then play it with the
+      <p><a href="../try/">Try Viber</a> runs the same firmware in the browser, on a drawn FM-1: press Switch on, then play it with the
         mouse, a touch screen or the computer keyboard. Nothing is installed and your unit isn't touched; what you save stays in that
         browser. USB (the editor, MIDI out, audio) and the TRS MIDI jack aren't there.</p>
     </li>
     <li class="step" id="install/installer">
       <h3>The installer</h3>
-      <p>The <a href="../webapp/installer/">Skiff installer</a> is a web page, made for Chrome or Edge on a computer: they let a page
+      <p>The <a href="../webapp/installer/">Viber installer</a> is a web page, made for Chrome or Edge on a computer: they let a page
         talk to the FM-1 over USB MIDI. In a browser without it, the page says so. The page carries the release it installs; its status
-        line says Skiff 2.5 when it's ready.</p>
-      <p>Read the page first. Skiff is custom firmware: the author accepts no responsibility if your FM-1 is damaged or misbehaves
-        because of it, so use it at your own risk, and report problems on <a href="https://github.com/illuminus5/skiff/issues">GitHub</a>.
+        line says Viber 1.0 when it's ready.</p>
+      <p>Read the page first. Viber is custom firmware: the author accepts no responsibility if your FM-1 is damaged or misbehaves
+        because of it, so use it at your own risk, and report problems on <a href="https://github.com/ant25fr/viber/issues">GitHub</a>.
         The way back is in step 13.</p>
     </li>
     <li class="step" id="install/connect">
@@ -272,38 +272,38 @@ footer p { max-width: 1240px; margin: 6px auto; }
       <h3>Install</h3>
       <p>Press <b>Install</b>. The browser asks to let the page use your MIDI devices: allow it. (Refused it? Allow MIDI in the site
         settings, from the address bar, and press Install again.) The page says Starting, then Verifying: the firmware on the unit, the
-        official one or Skiff, reads parts of the package and gets the update loader ready. Skiff's own screen says UPDATE meanwhile.</p>
+        official one or Viber, reads parts of the package and gets the update loader ready. Viber's own screen says UPDATE meanwhile.</p>
     </li>
     <li class="step" id="install/update-mode">
       <h3>Update mode</h3>
-      <p>The unit restarts into update mode: Skiff's update loader, its screen saying UPDATE MODE, WAITING FOR THE VIBER INSTALLER,
+      <p>The unit restarts into update mode: Viber's update loader, its screen saying UPDATE MODE, WAITING FOR THE VIBER INSTALLER,
         KEEP USB CONNECTED, while the page says Switching to update mode, then Writing. The page sends the whole package, and the
         loader checks all of it, for this chip and for damage, before it erases anything.</p>
       <p>The page's bar moves only a little during that check; it fills with the writing, next.</p>
     </li>
     <li class="step" id="install/writing">
       <h3>Writing</h3>
-      <p>Then the loader writes Skiff: WRITING, DO NOT SWITCH OFF, and its bar fills as it goes. The whole install takes about two
+      <p>Then the loader writes Viber: WRITING, DO NOT SWITCH OFF, and its bar fills as it goes. The whole install takes about two
         minutes (sped up in the video). Don't unplug the cable, switch the unit off or close the page until the page says Done.</p>
     </li>
     <li class="step" id="install/restart">
-      <h3>Skiff starts</h3>
-      <p>Written, the loader restarts the unit on the new firmware: Skiff's splash with its version, the LEDs sweep across, and HOME.
+      <h3>Viber starts</h3>
+      <p>Written, the loader restarts the unit on the new firmware: Viber's splash with its version, the LEDs sweep across, and HOME.
         The page waits for the unit, checks that it answers as the firmware just installed, and says Done.</p>
     </li>
     <li class="step" id="install/home">
       <h3>A new unit</h3>
-      <p>Installed over the official firmware, Skiff starts as a new unit: HOME with six tracks, a sound on each, no notes yet, track 1
+      <p>Installed over the official firmware, Viber starts as a new unit: HOME with six tracks, a sound on each, no notes yet, track 1
         selected. The keys play the selected track: here ACID, on track 1. <a href="#find-your-way">Chapter 2</a> shows you around and
         <a href="#first-beat">chapter 3</a> makes the first beat.</p>
     </li>
     <li class="step" id="install/later">
       <h3>Later releases</h3>
-      <p>New releases come out on <a href="https://github.com/illuminus5/skiff/releases">GitHub</a>, and the installer page then installs
-        the newest. Install it the same way, over the Skiff you have: the loader rewrites only the firmware, so your projects, sounds,
+      <p>New releases come out on <a href="https://github.com/ant25fr/viber/releases">GitHub</a>, and the installer page then installs
+        the newest. Install it the same way, over the Viber you have: the loader rewrites only the firmware, so your projects, sounds,
         samples and settings stay (2.5 moves every FM-1 to MENU › SYSTEM › CPU 2 CORES once: <a href="#settings/system">chapter
         18</a>). Which version you have: MENU › SYSTEM › ABOUT (<a href="#settings/about">chapter 18</a>).</p>
-      <p>From Skiff 1.x or Felucca to 2.0, the page first saves a complete backup to the computer (<code>Skiff-backup-<i>date</i>.json</code>:
+      <p>From Skiff 1.x or Felucca to 2.0, the page first saves a complete backup to the computer (<code>Viber-backup-<i>date</i>.json</code>:
         keep it, it's the way back). 2.0 reads what Skiff 1.0 and later saved, and keeps it in newer formats from then on; after the
         install the page converts what 2.0 can't read as it was (Felucca's projects and user sounds, DIGITAL sounds, the oldest formats),
         writes only that back, and lists what it converted. A slot 2.0 can't read says OLD FORMAT on the unit and is kept as it is.
@@ -318,17 +318,17 @@ footer p { max-width: 1240px; margin: 6px auto; }
         finishes. (A loader from before 1.3.2 keeps the screen black instead.)</p>
       <p>Connect it and press Install again: the page finds the unit in update mode and finishes the install. If it can't find it, plug
         the FM-1 straight into the computer: a USB hub or USB-sharing software can lose it when it switches to update mode. M-VAVE's own
-        updater can't see the FM-1 in this state, so it has to be this page, or <code>tools/fm1_install.py</code> (step 14). Once Skiff
+        updater can't see the FM-1 in this state, so it has to be this page, or <code>tools/fm1_install.py</code> (step 14). Once Viber
         runs, the way back to V15 is open again.</p>
     </li>
     <li class="step" id="install/stuck">
       <h3>Still stuck?</h3>
       <p>If a computer sees a USB disk named WL82 UBOOT1.00 (or WL80UBOOT), the chip's own boot mode, or nothing at all, the README's
-        <a href="https://github.com/illuminus5/skiff#if-the-fm-1-does-not-start">If the FM-1 does not start</a> has the steps: another
+        <a href="https://github.com/ant25fr/viber#if-the-fm-1-does-not-start">If the FM-1 does not start</a> has the steps: another
         USB data cable and another port, the FM-1 charged, other MIDI apps closed, then the install again; if it stays in boot mode,
         <a href="https://github.com/kurogedelic/FM-1-transporter">FM-1 Transporter</a> (on a Mac, through a Seeed XIAO RP2040) or
         <a href="https://github.com/kagaimiq/jl-uboot-tool">jl-uboot-tool</a> (Windows and Linux, over the USB cable) reads and writes the
-        FM-1's flash. Anything else: <a href="https://github.com/illuminus5/skiff/issues">open an issue</a>.</p>
+        FM-1's flash. Anything else: <a href="https://github.com/ant25fr/viber/issues">open an issue</a>.</p>
       <p>Holding <kbd>OCT−</kbd> and <kbd>OCT+</kbd> together for five seconds is not the installer's update mode: it starts that boot
         mode, which the installer doesn't use. After two seconds the screen counts down, UPDATE MODE IN 3, 2, 1: let go to cancel.</p>
     </li>
@@ -338,15 +338,15 @@ footer p { max-width: 1240px; margin: 6px auto; }
         <a href="https://www.m-vave.com/download">M-VAVE's downloads</a>, open <b>Return to official V15</b> and choose the unmodified
         <code>FM-1.fwsc</code>: the page checks it in the browser and sends it nowhere. Press <b>Back up and return to official V15</b>.</p>
       <p>It first saves a complete backup of your music to the computer (the music now, saved projects, sound banks, samples and
-        settings, as <code>Skiff-backup-<i>date</i>.json</code>), asks whether it was saved, then installs V15 the way it installs Skiff.
-        V15 can't open Skiff's music: to bring the backup back later, install Skiff again and use the <a href="../webapp/editor/">editor</a>.
-        A Skiff too old for complete backups has to be updated first. <code>tools/fm1_install.py FM-1.fwsc</code> and M-VAVE's own
+        settings, as <code>Viber-backup-<i>date</i>.json</code>), asks whether it was saved, then installs V15 the way it installs Viber.
+        V15 can't open Viber's music: to bring the backup back later, install Viber again and use the <a href="../webapp/editor/">editor</a>.
+        A Viber too old for complete backups has to be updated first. <code>tools/fm1_install.py FM-1.fwsc</code> and M-VAVE's own
         updater go back too, without the backup.</p>
     </li>
     <li class="step" id="install/python">
       <h3>With Python</h3>
       <p>Without Chrome or Edge, or from a terminal: download <code>skiff-2.7.fwsc</code> from
-        <a href="https://github.com/illuminus5/skiff/releases/latest">the latest release</a> and, with the repository's <code>tools/</code>
+        <a href="https://github.com/ant25fr/viber/releases/latest">the latest release</a> and, with the repository's <code>tools/</code>
         folder and Python 3, run <code>pip install mido python-rtmidi</code>, then <code>python tools/fm1_install.py skiff-2.7.fwsc</code>.
         It does what the page does, and finishes an install left in update mode too, but it converts nothing: from 1.x or Felucca
         to 2.0, take a backup in the editor first and restore it after, and the Restore converts it.</p>
@@ -356,7 +356,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <section class="chapter" id="find-your-way" data-n="2" data-group="START HERE" data-video="w7Ko3CbjvZI">
   <div class="ch-head"><span class="num">02</span><div><p class="group">START HERE</p><h2>Find your way around</h2></div></div>
-  <p class="meta"><b>You'll need</b> Skiff on the unit. <b>You'll learn</b> the pages, the four knobs, the quick layers, SHIFT and the
+  <p class="meta"><b>You'll need</b> Viber on the unit. <b>You'll learn</b> the pages, the four knobs, the quick layers, SHIFT and the
     MENU: how every other chapter gets around.</p>
   <div class="video"></div>
   <ol class="steps">
@@ -445,7 +445,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <section class="chapter" id="first-beat" data-n="3" data-group="START HERE" data-video="RUFVIT5l7b8">
   <div class="ch-head"><span class="num">03</span><div><p class="group">START HERE</p><h2>Your first beat</h2></div></div>
-  <p class="meta"><b>You'll need</b> Skiff on the unit (<a href="#install">chapter 1</a>). <b>You'll learn</b> the drum grid, PLAY and the
+  <p class="meta"><b>You'll need</b> Viber on the unit (<a href="#install">chapter 1</a>). <b>You'll learn</b> the drum grid, PLAY and the
     tempo, writing a bass line step by step, changing a sound and undo: a beat in two minutes.</p>
   <div class="video"></div>
   <ol class="steps">
@@ -913,7 +913,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
   </ol>
   <p class="meta" id="free-take"><b>A free take.</b> Stopped, play a phrase on the selected track in your own time, on the keys,
     from MIDI or with the arp, up to 30 s. Then hold <kbd>HOME</kbd> and tap <kbd>SAVE</kbd>: the header says FREE TAKE, and the
-    phrase is in the track's steps, drawn on the panel, at the tempo Skiff hears in it and from the note it takes for the 1.
+    phrase is in the track's steps, drawn on the panel, at the tempo Viber hears in it and from the note it takes for the 1.
     <kbd>KNOB 1</kbd>, GUESS, is that tempo; turn it for the next likeliest, double and half time among them. <kbd>KNOB 2</kbd>,
     BARS: 1, 2 or 4 bars of sixteenths, 8 of eighths. <kbd>KNOB 3</kbd>, FROM, is the note that's the first beat (NOTE 1, NOTE 2 …;
     the ones before it go at the loop's end). <kbd>KNOB 4</kbd>, TEMPO: SET makes the guess the song's tempo, KEEP leaves the tempo
@@ -1864,12 +1864,12 @@ footer p { max-width: 1240px; margin: 6px auto; }
 <!-- ================================================================ YOUR SETUP -->
 <section class="chapter" id="projects" data-n="17" data-group="YOUR SETUP" data-video="ctc1VaOK4PU">
   <div class="ch-head"><span class="num">17</span><div><p class="group">YOUR SETUP</p><h2>Projects and saving</h2></div></div>
-  <p class="meta"><b>You'll learn</b> what Skiff keeps by itself, and how to save, load and back up projects.</p>
+  <p class="meta"><b>You'll learn</b> what Viber keeps by itself, and how to save, load and back up projects.</p>
   <div class="video"></div>
   <ol class="steps">
     <li class="step" id="projects/kept">
       <h3>Kept as you go</h3>
-      <p>The beat from <a href="#first-beat">chapter 3</a> plays, with two chords on track 2. Nothing in Skiff has to be saved to be kept:
+      <p>The beat from <a href="#first-beat">chapter 3</a> plays, with two chords on track 2. Nothing in Viber has to be saved to be kept:
         the patterns keep themselves (<a href="#song/kept">chapter 14</a>), and the whole session, the sounds and the mix too, goes into an
         autosave of its own, written once the music has changed, stopped, with nothing touched for 2 s (at most once every 20 s),
         and within a second of a save or a project load: switch off a few seconds after your last change, or right after a save. Tap
@@ -2011,7 +2011,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
     </li>
     <li class="step" id="settings/about">
       <h3>About</h3>
-      <p>On ABOUT, <kbd>OCT+</kbd>: SKIFF, its version (v2.5), the CPU's clock, a QR code to the source on GitHub, and the credits of
+      <p>On ABOUT, <kbd>OCT+</kbd>: VIBER, based on Viber and Felucca by Anto, its version (1.0), the CPU's clock, and the credits of
         the code it's built on, Felucca first. <kbd>PRESETS</kbd> scrolls them; <kbd>OCT−</kbd> goes back to the tabs.</p>
     </li>
     <li class="step" id="settings/close">
@@ -2024,7 +2024,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <section class="chapter" id="midi-editor" data-n="19" data-group="YOUR SETUP" data-video="mXNAUkO3bYo">
   <div class="ch-head"><span class="num">19</span><div><p class="group">YOUR SETUP</p><h2>MIDI and the web editor</h2></div></div>
-  <p class="meta"><b>You'll learn</b> to play Skiff from MIDI and map controllers to its knobs. Editing it from a computer, the web
+  <p class="meta"><b>You'll learn</b> to play Viber from MIDI and map controllers to its knobs. Editing it from a computer, the web
     editor, is <a href="#web-editor">chapter 20</a>.</p>
   <div class="video"></div>
   <ol class="steps">
@@ -2095,14 +2095,14 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <section class="chapter" id="web-editor" data-n="20" data-group="YOUR SETUP" data-video="xmV7wPG3mWA">
   <div class="ch-head"><span class="num">20</span><div><p class="group">YOUR SETUP</p><h2>The web editor</h2></div></div>
-  <p class="meta"><b>You'll need</b> an FM-1 on Skiff, a USB data cable, and Chrome or Edge on a computer. <b>You'll learn</b> to
-    connect the <a href="../webapp/editor/">Skiff Editor</a>, save a complete backup of the unit and restore it, bring FM6 patches in
+  <p class="meta"><b>You'll need</b> an FM-1 on Viber, a USB data cable, and Chrome or Edge on a computer. <b>You'll learn</b> to
+    connect the <a href="../webapp/editor/">Viber Editor</a>, save a complete backup of the unit and restore it, bring FM6 patches in
     and out as <code>.syx</code> files, put samples of your own on the unit, and change its settings and theme from the computer.</p>
   <div class="video"></div>
   <ol class="steps">
     <li class="step" id="web-editor/skiff">
       <h3>The web editor</h3>
-      <p>The beat from <a href="#first-beat">chapter 3</a> plays, with two chords on track 2, saved as project A, BEAT. The Skiff
+      <p>The beat from <a href="#first-beat">chapter 3</a> plays, with two chords on track 2, saved as project A, BEAT. The Viber
         Editor is a web page that reads and changes the FM-1 over USB while it plays. It runs in Chrome or Edge on a computer, which let
         a page talk to MIDI devices; nothing is installed, and what it saves stays on your computer.</p>
     </li>
@@ -2124,7 +2124,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
       <h3>Complete backup</h3>
       <p>Save backup reads everything the unit keeps: the music as it is now, projects A–D, your user sounds and their FM6 patches,
         the pattern pool, samples USR1–3 and the settings. It stops the music first, shows how far it has got, and the browser saves
-        one file, Skiff-backup- and the date, <code>.json</code>: 25 KB here, a few hundred with samples. Keep it somewhere safe.</p>
+        one file, Viber-backup- and the date, <code>.json</code>: 25 KB here, a few hundred with samples. Keep it somewhere safe.</p>
     </li>
     <li class="step" id="web-editor/new">
       <h3>Music gone</h3>
@@ -2199,12 +2199,12 @@ footer p { max-width: 1240px; margin: 6px auto; }
     pattern pool (<a href="#song">chapter 14</a>). Mixer: the six strips. Library: sounds kept on the computer, dragged to and from the
     unit's 32 user slots.</p>
   <p class="meta"><b>The Screen tab.</b> The FM-1's screen on the computer, as large as the window. Start takes a backup, restarts
-    the FM-1 and follows it from then on: a copy of Skiff in the page does what the unit does, so the music is kept and the FM-1's USB
+    the FM-1 and follows it from then on: a copy of Viber in the page does what the unit does, so the music is kept and the FM-1's USB
     audio stays on. Full screen fills the display, a phone's or a tablet's too (Chrome on Android, the FM-1 plugged into it).
     Controls draws the FM-1's panel round the screen: click or tap its buttons and keys, drag a knob or roll the mouse wheel on it,
-    right-click a button to hold it (HOME held is SHIFT), or play from the computer's keyboard as on <a href="../try/">Try Skiff</a>.
+    right-click a button to hold it (HOME held is SHIFT), or play from the computer's keyboard as on <a href="../try/">Try Viber</a>.
     The FM-1 takes them as its own presses, and the panel's lights follow the unit's. MASTER stays on the unit. An SMK-37 gets
-    the screen alone: Controls are the FM-1's, and need Skiff 2.7.</p>
+    the screen alone: Controls are the FM-1's, and need Viber.</p>
 </section>
 
 <!-- ================================================================ REFERENCE -->
@@ -2224,7 +2224,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
     <dt id="g-follow">Chord follow</dt><dd>A track on FOLLOW plays in another track's chords. SEL's third page: <a href="#chord-follow">chapter 21</a>.</dd>
     <dt id="g-chain">Chain</dt><dd>Entries on CHAIN (SONG's <kbd>KNOB 3</kbd> below 1x) go on into the next: the track plays and edits them as one long pattern.</dd>
     <dt id="g-lock">Lock</dt><dd>A step's own value for a control: hold the step and turn a knob.</dd>
-    <dt id="g-take">Take</dt><dd>SHIFT + SAVE keeps the loop you just played as the track's pattern, whether or not REC was on. Stopped, it's a <a href="#free-take">free take</a>: what you played, at the tempo Skiff hears in it.</dd>
+    <dt id="g-take">Take</dt><dd>SHIFT + SAVE keeps the loop you just played as the track's pattern, whether or not REC was on. Stopped, it's a <a href="#free-take">free take</a>: what you played, at the tempo Viber hears in it.</dd>
     <dt id="g-scene">Scene</dt><dd>The entry every track is on and every mute, stored together (16 in a project) and recalled with one key in PERFORM.</dd>
     <dt id="g-project">Project</dt><dd>The sounds, the lists, the scenes and the settings of a piece of music. There are four; the patterns themselves live in the pool.</dd>
     <dt id="g-undo">Undo</dt><dd>Hold <kbd>SAVE</kbd>. Six changes are kept; <kbd>OCT−</kbd> goes further back and <kbd>OCT+</kbd> redoes while the box shows.</dd>
@@ -2234,7 +2234,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
 <section class="chapter plain" id="troubleshooting" data-group="PAGE">
   <h2>If the FM-1 does not start</h2>
   <p><b>The screen says UPDATE MODE, WAITING FOR THE VIBER INSTALLER, or stays black while a computer sees a USB MIDI device named
-    "Felucca Update":</b> an install was cut off, and the FM-1 waits in Skiff's update loader at every power-on. Nothing is lost.
+    "Felucca Update":</b> an install was cut off, and the FM-1 waits in Viber's update loader at every power-on. Nothing is lost.
     Connect it by USB and press Install on the <a href="../webapp/installer/">installer</a> again (or run
     <code>tools/fm1_install.py</code>): it finishes the install. If the installer can't find it, plug the FM-1 straight into the
     computer: a USB hub or USB-sharing software can lose it when it switches to update mode. M-VAVE's own updater does not see the
@@ -2255,7 +2255,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
   <p><b>A computer sees nothing at all:</b> try another USB cable (a charge-only cable has no data lines) and another port, with the
     FM-1 charged, then restart the computer: Windows can leave a USB port dead after a device in boot mode goes away. FM-1 Transporter
     (above) reaches the chip's boot mode by itself.</p>
-  <p>Anything else: <a href="https://github.com/illuminus5/skiff/issues">open an issue</a> on GitHub.</p>
+  <p>Anything else: <a href="https://github.com/ant25fr/viber/issues">open an issue</a> on GitHub.</p>
 </section>
 
 <section class="chapter plain" id="reference" data-group="PAGE">
@@ -2294,10 +2294,10 @@ footer p { max-width: 1240px; margin: 6px auto; }
   <div class="where-in">
     <p class="cap"><span>WHERE ON THE UNIT</span><span id="where-n"></span></p>
     <div class="device" id="device"><svg id="panel" viewBox="0 0 1000 624" aria-hidden="true"></svg></div>
-    <iframe class="emu" id="emu" title="Try Skiff: Skiff running in the browser"></iframe>
+    <iframe class="emu" id="emu" title="Try Viber: Viber running in the browser"></iframe>
     <p class="step-name" id="where-step"></p>
     <p class="legend"><span><i></i>TAP</span><span><i class="h"></i>HOLD</span><span><i class="o"></i>TURN</span></p>
-    <p class="follow"><a class="go" id="follow" href="../try/" target="_blank" rel="noopener">Follow along on Try Skiff</a>
+    <p class="follow"><a class="go" id="follow" href="../try/" target="_blank" rel="noopener">Follow along on Try Viber</a>
       <button type="button" id="unfollow">Hide</button><button type="button" id="fresh">New unit</button></p>
     <p class="follow-keys">Click the unit, then play it from the keyboard too: Z to ' and Q to O are the keys, 1 to = the buttons FX
       to REC, [ ] OCT, ↑ ↓ SELECT, ← → ALGORITHM. Shift-click a button to hold it; click it again to let go.</p>
@@ -2307,10 +2307,10 @@ footer p { max-width: 1240px; margin: 6px auto; }
 <button class="where-toggle" id="where-toggle" type="button" aria-controls="where" aria-expanded="false">Where?</button>
 
 <footer>
-  <p>Skiff is free firmware for the M-VAVE FM-1 (<a href="https://github.com/illuminus5/skiff">source</a>, GPL-3.0), built on Felucca by
-    Leo Kuroshita, Hügelton Instruments. The videos are made from the firmware itself: every screen is Skiff's own display.</p>
+  <p>Viber is free firmware for the M-VAVE FM-1 (<a href="https://github.com/ant25fr/viber">source</a>, GPL-3.0), built on Felucca by
+    Leo Kuroshita, Hügelton Instruments. The videos are made from the firmware itself: every screen is Viber's own display.</p>
   <p>Fonts: Barlow Condensed and Inter Tight, SIL Open Font License (<a href="../fonts/OFL.txt">OFL</a>,
-    <a href="../fonts/InterTight-OFL.txt">OFL</a>). M-VAVE and FM-1 are trademarks of their respective owners; Skiff is not
+    <a href="../fonts/InterTight-OFL.txt">OFL</a>). M-VAVE and FM-1 are trademarks of their respective owners; Viber is not
     affiliated with or endorsed by them.</p>
 </footer>
 
@@ -2552,7 +2552,7 @@ for (const tr of $$("#ctrls tr[data-ctrl]")) {
   $("td.in", tr).innerHTML = links.join("") || "<span>—</span>";
 }
 
-/* ---------------------------------------------------------------- following along on Try Skiff, docked in the drawing's place:
+/* ---------------------------------------------------------------- following along on Try Viber, docked in the drawing's place:
  * the same panel.js controls, so the step's ones are marked on it too (same origin: a style of ours in its page) */
 const emu = $("#emu");
 function paintLive() {
@@ -2590,7 +2590,7 @@ function follow(on) {
 $("#follow").addEventListener("click", (e) => { if (matchMedia("(min-width: 901px)").matches) { e.preventDefault(); follow(true); } });
 $("#unfollow").addEventListener("click", () => follow(false));
 $("#fresh").addEventListener("click", () => {
-  if (!confirm("Start again on a new unit? This erases everything Try Skiff has saved in this browser: its projects and settings.")) return;
+  if (!confirm("Start again on a new unit? This erases everything Try Viber has saved in this browser: its projects and settings.")) return;
   emu.addEventListener("load", () => {
     try { localStorage.removeItem("skiff-emu-flash"); } catch { /* storage off: nothing kept anyway */ }   // (try/'s STORE)
     emu.src = "../try/";
