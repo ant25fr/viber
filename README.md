@@ -1,18 +1,28 @@
-<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/logo/skiff-logo.svg">
-    <img src="docs/logo/skiff-logo-light.svg" alt="Skiff" width="560">
-  </picture>
-</p>
+<h1 align="center">Viber</h1>
 
 <p align="center"><b>A six-track groovebox firmware for the M-VAVE FM-1 and SMK-37 Pro</b><br>
-synths and drums, patterns and a clip-launcher grid, live performance, and a screen that shows what every control does</p>
+synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, live performance, and a screen that shows what every control does<br>
+<sub>Based on Skiff and Felucca, by Anto. Version 1.0</sub></p>
 
 <p align="center">
-  <a href="https://github.com/illuminus5/skiff/releases/latest"><img src="https://img.shields.io/github/v/release/illuminus5/skiff?label=release" alt="Latest release"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue.svg" alt="License: GPL-3.0-only"></a>
   <img src="https://img.shields.io/badge/hardware-M--VAVE%20FM--1%20%7C%20SMK--37%20Pro-555" alt="Hardware: M-VAVE FM-1 | SMK-37 Pro">
 </p>
+
+## What Viber adds
+
+- **Wavetable engine (WAVE)**: 8 tables of 16 single-cycle frames, scanned with TABLE, with WAVE, SUB and DETUNE; the screen draws the table as a 3D stack with the current frame highlighted.
+- **Clips mode (SEQ › CLIPS)**: each track's clips drawn at double width and split over 2 pages, launched with OCT+ or a whole column at once.
+- **Ableton-style knobs**: the 4 settings of every page as round knobs at the bottom of the screen.
+- **Master VU meter** in the header, left of the battery.
+
+<table>
+<tr>
+<td width="33%"><img src="docs/img/viber_wavetable.png" alt="WAVE, the wavetable engine"><br><sub><b>WAVE</b>: the wavetable engine</sub></td>
+<td width="33%"><img src="docs/img/viber_clips_p1.png" alt="SEQ › CLIPS"><br><sub><b>CLIPS</b>: wide clips, 2 pages</sub></td>
+<td width="33%"><img src="docs/img/viber_clips_chain.png" alt="CLIPS, chained clips"><br><sub><b>CLIPS</b>: chained clips</sub></td>
+</tr>
+</table>
 
 <p align="center"><b>New in 2.7:</b> the Screen tab goes full screen, works the FM-1 from the page (mouse, touch or
 keyboard) and comes to the SMK-37, the editor's Sequencer as a piano roll, SYNC OUT for Pocket Operators, and fixes: the phaser's squeal, the
