@@ -1,0 +1,7 @@
+{
+  "what": "Six-track groovebox for the FM-1: synths and drums, a wavetable engine, clips on two pages, Ableton-style knobs and a master VU meter. Based on Skiff and Felucca.",
+  "author": "Anto",
+  "kinds": "groove",
+  "image": "docs/viber-hub.png",
+  "sounds": "CC0: Versilian Studios VSCO-2 CE and VCSL instrument samples (assets/samples-cc0); the drum sounds and SLICE's two breaks are generated in this repository (GPL-3.0-only)"
+}
