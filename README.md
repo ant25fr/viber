@@ -13,7 +13,7 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, l
 
 - **[Web installer](https://ant25fr.github.io/viber/webapp/installer/)**: installs Viber on an FM-1 from the browser (WebUSB), and brings the official firmware back.
 - **[Editor](https://ant25fr.github.io/viber/webapp/editor/)** and **[emulator](https://ant25fr.github.io/viber/try/)**: edit the unit from a computer, or try Viber in the browser.
-- The package is `viber-1.0.fwsc` (identity `FM-1_950`), attached to the [releases](https://github.com/ant25fr/viber/releases).
+- The package is `viber-1.0.fwsc` (identity `FM-1_58010000`), attached to the [releases](https://github.com/ant25fr/viber/releases).
 
 ## What Viber adds
 

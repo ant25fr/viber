@@ -51,7 +51,7 @@ def package(path, version):
     raw = Path(path).read_bytes()
     product = product_of(raw)
     model, _, num = product.rpartition("_")
-    if model not in MODELS or not re.fullmatch(r"[79]\d\d", num):
+    if model not in MODELS or not re.fullmatch(r"\d{3,}", num):
         raise SystemExit(f"{path}: identity {product!r} is not one of our packages "
                          f"(FM-1_7xx, SMK-37 Pro_7xx, SMK-37 Elite_7xx, MKE-P37_7xx)")
     if b"FELUCCA-LOADER-1" not in raw:              # Felucca loader marker: never publish a package with vendor files
