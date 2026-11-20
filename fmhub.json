@@ -3,5 +3,7 @@
   "author": "Anto",
   "kinds": "groove",
   "image": "docs/viber-hub.png",
-  "sounds": "CC0: Versilian Studios VSCO-2 CE and VCSL instrument samples (assets/samples-cc0); the drum sounds and SLICE's two breaks are generated in this repository (GPL-3.0-only)"
+  "sounds": "CC0: Versilian Studios VSCO-2 CE and VCSL instrument samples (assets/samples-cc0); the drum sounds and SLICE's two breaks are generated in this repository (GPL-3.0-only)",
+  "play": "https://ant25fr.github.io/viber/try/",
+  "editor": "https://ant25fr.github.io/viber/webapp/editor/"
 }
