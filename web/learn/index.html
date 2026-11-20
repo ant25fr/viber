@@ -276,7 +276,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
     </li>
     <li class="step" id="install/update-mode">
       <h3>Update mode</h3>
-      <p>The unit restarts into update mode: Skiff's update loader, its screen saying UPDATE MODE, WAITING FOR THE SKIFF INSTALLER,
+      <p>The unit restarts into update mode: Skiff's update loader, its screen saying UPDATE MODE, WAITING FOR THE VIBER INSTALLER,
         KEEP USB CONNECTED, while the page says Switching to update mode, then Writing. The page sends the whole package, and the
         loader checks all of it, for this chip and for damage, before it erases anything.</p>
       <p>The page's bar moves only a little during that check; it fills with the writing, next.</p>
@@ -313,7 +313,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
       <h3>If it stops</h3>
       <p>An install cut off (the cable pulled, the unit switched off) or a write that fails loses nothing. A connection dropped
         while it writes, with the page still open, only pauses it: the page says so and waits, and once the cable is back in (or the
-        unit on again) the install carries on by itself. A failed write says UPDATE FAILED, INSTALL AGAIN WITH THE SKIFF INSTALLER;
+        unit on again) the install carries on by itself. A failed write says UPDATE FAILED, INSTALL AGAIN WITH THE VIBER INSTALLER;
         switched off in the middle, the unit starts in update mode at every power-on, UPDATE MODE on its screen, until an install
         finishes. (A loader from before 1.3.2 keeps the screen black instead.)</p>
       <p>Connect it and press Install again: the page finds the unit in update mode and finishes the install. If it can't find it, plug
@@ -2233,7 +2233,7 @@ footer p { max-width: 1240px; margin: 6px auto; }
 
 <section class="chapter plain" id="troubleshooting" data-group="PAGE">
   <h2>If the FM-1 does not start</h2>
-  <p><b>The screen says UPDATE MODE, WAITING FOR THE SKIFF INSTALLER, or stays black while a computer sees a USB MIDI device named
+  <p><b>The screen says UPDATE MODE, WAITING FOR THE VIBER INSTALLER, or stays black while a computer sees a USB MIDI device named
     "Felucca Update":</b> an install was cut off, and the FM-1 waits in Skiff's update loader at every power-on. Nothing is lost.
     Connect it by USB and press Install on the <a href="../webapp/installer/">installer</a> again (or run
     <code>tools/fm1_install.py</code>): it finishes the install. If the installer can't find it, plug the FM-1 straight into the
