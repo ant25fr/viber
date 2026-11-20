@@ -51,13 +51,13 @@ def package(path, version):
     raw = Path(path).read_bytes()
     product = product_of(raw)
     model, _, num = product.rpartition("_")
-    if model not in MODELS or not re.fullmatch(r"7\d\d", num):
+    if model not in MODELS or not re.fullmatch(r"[79]\d\d", num):
         raise SystemExit(f"{path}: identity {product!r} is not one of our packages "
                          f"(FM-1_7xx, SMK-37 Pro_7xx, SMK-37 Elite_7xx, MKE-P37_7xx)")
     if b"FELUCCA-LOADER-1" not in raw:              # Felucca loader marker: never publish a package with vendor files
         raise SystemExit(f"{path}: no Felucca loader in it; the site ships only fm1pkg_make.py packages "
                          "(a package patched from an official one carries vendor files)")
-    return product, raw, f"skiff-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}{MODELS[model]}.fwsc"
+    return product, raw, f"{'viber' if model == 'FM-1' else 'skiff'}-{re.sub(r'[^A-Za-z0-9.-]', '-', version)}{MODELS[model]}.fwsc"
 
 
 def main(pkg, version, out, *more):
@@ -86,7 +86,7 @@ def main(pkg, version, out, *more):
     inst, ed, fw = out / "webapp" / "installer", out / "webapp" / "editor", out / "firmware"
     for d in (inst, ed, fw):
         d.mkdir(parents=True, exist_ok=True)
-    for old in fw.glob("skiff-*.fwsc"):          # the current packages only
+    for old in [*fw.glob("skiff-*.fwsc"), *fw.glob("viber-*.fwsc")]:          # the current packages only
         old.unlink()
     (inst / "index.html").write_text(html, encoding="utf-8")
     for _, data, n in pkgs:
@@ -97,7 +97,7 @@ def main(pkg, version, out, *more):
     for n in names:
         shutil.copy(lic / n, fw / "LICENSES" / n)
     (fw / "LICENSES" / "index.html").write_text(    # the installer links this folder: Pages lists no folders
-        '<!doctype html><meta charset="utf-8"><title>Skiff licences</title><h1>Licence texts</h1><ul>'
+        '<!doctype html><meta charset="utf-8"><title>Viber licences</title><h1>Licence texts</h1><ul>'
         + "".join(f'<li><a href="{n}">{n}</a></li>' for n in names)
         + '</ul><p><a href="../LICENSING.md">LICENSING.md</a> · <a href="../LICENSE">LICENSE (GPL-3.0)</a></p>\n',
         encoding="utf-8")
@@ -129,9 +129,9 @@ def main(pkg, version, out, *more):
     shutil.rmtree(out / "try", ignore_errors=True)
     shutil.copytree(emu, out / "try")
     (out / "index.html").write_text(
-        '<!doctype html><meta charset="utf-8"><title>Skiff</title>'
+        '<!doctype html><meta charset="utf-8"><title>Viber</title>'
         '<meta http-equiv="refresh" content="0; url=webapp/installer/">'
-        '<a href="webapp/installer/">Skiff installer</a>\n', encoding="utf-8")
+        '<a href="webapp/installer/">Viber installer</a>\n', encoding="utf-8")
     print(f"site: {out}: webapp/installer ({len(html)} B), webapp/editor, learn, try, "
           + ", ".join(f"firmware/{n} ({len(d)} B, {p})" for p, d, n in pkgs))
 
