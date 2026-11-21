@@ -46,7 +46,7 @@
 #endif
 #endif
 #ifndef FELUCCA_VERSION
-#define FELUCCA_VERSION "v1.0"       /* Skiff's; shown in the menu, the console and the editor; build.py --release X.Y */
+#define FELUCCA_VERSION "v1.1"       /* Skiff's; shown in the menu, the console and the editor; build.py --release X.Y */
 #endif
 #if FELUCCA_OTA && !FELUCCA_FLASH
 #error "FELUCCA_OTA needs FELUCCA_FLASH"
