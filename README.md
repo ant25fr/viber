@@ -2,7 +2,7 @@
 
 <p align="center"><b>A six-track groovebox firmware for the M-VAVE FM-1 and SMK-37 Pro</b><br>
 synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, live performance, and a screen that shows what every control does<br>
-<sub>Based on Skiff and Felucca, by Anto. Version 1.0</sub></p>
+<sub>Based on Skiff and Felucca, by Anto. Version 1.1</sub></p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue.svg" alt="License: GPL-3.0-only"></a>
@@ -13,7 +13,7 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, l
 
 - **[Web installer](https://ant25fr.github.io/viber/webapp/installer/)**: installs Viber on an FM-1 from the browser (WebUSB), and brings the official firmware back.
 - **[Editor](https://ant25fr.github.io/viber/webapp/editor/)** and **[emulator](https://ant25fr.github.io/viber/try/)**: edit the unit from a computer, or try Viber in the browser.
-- The package is `viber-1.0.fwsc` (identity `FM-1_2507010000`), attached to the [releases](https://github.com/ant25fr/viber/releases).
+- The package is `viber-1.1.fwsc` (identity `FM-1_2507010000`), attached to the [releases](https://github.com/ant25fr/viber/releases).
 
 ## What Viber adds
 
