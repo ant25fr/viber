@@ -1783,13 +1783,15 @@ static void graph_song(void)
             char s[3];
             if (id == PAT_NONE && !rt) {             /* empty: a dot; ((1.2.1, #12) a rest: a dash, lit while it plays, */
                 uint16_t dc = cb ? ux_mix(col, T_INK, 55) : T_DIM;   /* framed while staged, its repeats under it) */
+                if (ux.viber)                        /* (Skiff) VIBER: Ableton's empty slot, a dark cell, its stop square */
+                    lv_slot(x, ty, SG_W, SG_TH, cb ? ux_mix(col, T_BG, 45) : T_SURF, gi, cb ? ux_mix(col, T_BG, 70) : T_DIM);
                 if (p > first && p < last) {
                     cv_rect(x + 6, ty + SG_TH / 2 - 1, SG_W - 12, 2, p == rest ? (cb ? T_INK : col) : dc);
                     if (p == nx)
                         cv_frame(x - 1, ty - 1, SG_W + 2, SG_TH + 2, cb ? T_INK : col);
                     for (r = 0; r + 1u < reps && r < 3u; r++)
                         cv_rect(x + 2 + 6 * (int32_t)r, ty + SG_TH + 1, 4, 1, cb ? T_INK : col);
-                } else
+                } else if (!ux.viber)
                     cv_rect(x + SG_W / 2 - 1, ty + SG_TH / 2 - 1, 2, 2, dc);
                 if (pick)
                     cv_frame(x, ty, SG_W, SG_TH, T_TEXT);
@@ -1809,20 +1811,22 @@ static void graph_song(void)
             cv_rrect(x, ty, SG_W, SG_TH, 0, fill, gi);
             if (ux.viber)
                 lv_round(x, ty, SG_W, SG_TH, gi);     /* (Skiff) VIBER: nub the corners round, Ableton's session grid */
+            if (ux.viber && !rt && !cpy)             /* (Skiff) VIBER: Ableton's launch button on the clip's left, always there */
+                lv_button(x, ty, SG_TH, fill, gi, on, p == nx, ink);
+            if (ux.viber && on && !rt && !cpy && song.playing)   /* (Skiff) VIBER: the playing clip's progress, its foot */
+                lv_progress(x + LV_BTN, ty + SG_TH - 2, SG_W - LV_BTN, trk[k].seq_idx, (uint32_t)trk[k].p[P_SLEN], T_ACCENT);
             if (rt)
                 cv_rect(x + 6, ty + SG_TH / 2 - 1, SG_W - 12, 2, ink);
             else {
+                int32_t nl = ux.viber && !cpy ? LV_BTN : 0;   /* (the number in what the button leaves) */
                 pat_num(s, id);
-                GFX_HOOK_ALIGN(x, ty, x + SG_W, ty + SG_TH, AL_HV, "song entry number centred");
-                cv_text_in(x, ty + CAP_IN(S, SG_TH), SG_W, &AF_S, s, ink, fill);
+                GFX_HOOK_ALIGN(x + nl, ty, x + SG_W, ty + SG_TH, AL_HV, "song entry number centred");
+                cv_text_in(x + nl, ty + CAP_IN(S, SG_TH), SG_W - nl, &AF_S, s, ink, fill);
             }
             if (lists.snd[k][src][0])                /* ((2.0, #30, the user's pick 2A) an entry with a sound: its tile's
                                                       * top right corner cut, a 4 px step, to the ground) */
                 for (r = 0; r < 4u; r++)
                     cv_rect(x + SG_W - 4 + (int32_t)r, ty, 1, (int32_t)r + 1, gi);
-            if (ux.viber && !rt && !cpy && (on || p == nx))   /* (Skiff) VIBER: the launch glyph, only where it says */
-                lv_play(x + 1, ty + SG_TH - 6, on ? T_ACCENT : ((ui.frame >> 2) & 1u ? T_ACCENT : ink));   /* something:
-                                                      * playing solid, staged blinking at the next launch point */
             if (p == nx || cpy)                      /* staged: comes in at its launch point; ((2.0) COPY+'s: TEXT) */
                 cv_frame(x - 1, ty - 1, SG_W + 2, SG_TH + 2, cpy ? T_TEXT : mk);
             if (ux.viber && pick)                      /* (Skiff) VIBER: a crisp ring over the clip's own colour, not a */
