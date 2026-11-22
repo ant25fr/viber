@@ -2215,6 +2215,9 @@ static void draw_tracks(void)
 static struct {
     int16_t lv[WV_N];                               /* oldest first */
 } scd __attribute__((section(".pool")));
+#ifndef WEB_SCOPE_HOOK
+#define WEB_SCOPE_HOOK(c, cy, half, x0, lv) ((void)0)   /* ((Vibe 1.2) the browser build keeps the bars as data: felucca_web.c) */
+#endif
 
 /* (Viber) the output as a waveform that rolls: each draw takes the loudest sample of the last 512 the master output
  * made (scope_buf, before the click), eases it up fast and down slowly, and pushes it in at the right; the bars mirror
@@ -2242,6 +2245,7 @@ static void sk_wave(uint32_t w, uint16_t c)
         uint16_t col = ux_mix(c, T_SURF, (int32_t)(WV_N - 1u - i) * 70 / (WV_N - 1));   /* (the oldest 70 % gone) */
         cv_rect(x, cy - h, WV_P - 2, 2 * h, col);
     }
+    WEB_SCOPE_HOOK(c, cy, half, x0, scd.lv);
 }
 
 /* oscilloscope of the output, triggered on a rising zero crossing: a RAISE centre line, the trace 2 px (in silence

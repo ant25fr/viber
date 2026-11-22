@@ -7912,6 +7912,26 @@ const scrCv = $("scr-screen"), scrCtx = scrCv.getContext("2d"), scrSrc = documen
 scrSrc.width = scrSrc.height = 240;
 const scrSrcCtx = scrSrc.getContext("2d"), scrImg = scrSrcCtx.createImageData(240, 240);
 let scrFx = (() => { try { const v = localStorage.getItem("scrFx"); return v === "net" || v === "lcd" ? v : "smooth"; } catch (e) { return "smooth"; } })();
+/* the scope's bars again, at the display's resolution (the firmware hands over their data: felucca_web.c web_scope_data):
+ * the panel's colour over the 240-pixel bars, then the same bars with rounded ends */
+function scrScope(q) {
+  const c = scr.copy;
+  if (!c || !c.web_scope_data || scr.state !== "on") return;
+  const d = new Int32Array(c.memory.buffer, c.web_scope_data(), 44);
+  if (!d[0]) return;
+  const rgb = (p) => [((p >> 11) & 31) * 255 / 31, ((p >> 5) & 63) * 255 / 63, (p & 31) * 255 / 31];
+  const col = rgb(d[6]), bg = rgb(d[7]), gy = d[1], cy = d[3], half = d[4], x0 = d[5];
+  scrCtx.fillStyle = `rgb(${bg.map(Math.round)})`;
+  scrCtx.fillRect(x0 * q, (gy + cy - half) * q, 36 * 6 * q, 2 * half * q);
+  for (let i = 0; i < 36; i++) {
+    const h = 2 + d[8 + i] * (half - 2) / 1000, t = (35 - i) * 0.7 / 35;
+    scrCtx.fillStyle = `rgb(${col.map((v, k) => Math.round(v + (bg[k] - v) * t))})`;
+    scrCtx.beginPath();
+    if (scrCtx.roundRect) scrCtx.roundRect((x0 + i * 6) * q, (gy + cy - h) * q, 4 * q, 2 * h * q, 2 * q);
+    else scrCtx.rect((x0 + i * 6) * q, (gy + cy - h) * q, 4 * q, 2 * h * q);
+    scrCtx.fill();
+  }
+}
 function scrPaint() {
   const cv = scrCv;
   cv.classList.toggle("fx", scrFx !== "net");
@@ -7938,6 +7958,7 @@ function scrPaint() {
       scrCtx.fillRect(0, x, W, lw);
     }
   }
+  scrScope(W / 240);
 }
 try { new ResizeObserver(() => scrPaint()).observe(scrCv); } catch (e) { /* no observer: painted at each new picture */ }
 function scrSay(text, bad = false) { $("scr-status").textContent = text; $("scr-status").classList.toggle("bad", bad); }

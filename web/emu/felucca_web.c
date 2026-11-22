@@ -151,12 +151,30 @@ static void fm1_irq_on(void) {}
 #endif
 static uint16_t web_fb[240 * 240];       /* RGB565 as the panel gets it (high byte first) */
 static uint32_t web_draws;
+/* ((Vibe 1.2) the editor's own, finer drawing of the scope's bars) the waveform's data as sk_wave (ui_graph.c) made it, kept
+ * while its picture is what the screen shows there: the page paints the bars again at its display's resolution over it.
+ * ws[0..7]: valid, canvas y on the screen, canvas height, the middle line, half height, first bar x, colour, background
+ * (RGB565, not byte-swapped); ws[8..43]: the 36 levels, 0..1000 */
+static int32_t web_ws[8 + 36], web_wp[8 + 36];   /* shown, pending (drawn into the canvas, not yet sent to the panel) */
+static uint32_t web_wp_on;
+#define WEB_SCOPE_HOOK(c, cy, half, x0, lv) web_scope_note((c), (cy), (half), (x0), (lv))
+static void web_scope_note(uint16_t c, int32_t cy, int32_t half, int32_t x0, const int16_t *lv);   /* (below, after ui.c) */
+static void web_scope_sent(uint32_t y, uint32_t h)       /* a piece goes to the panel: the scope's own canvas shows it, any other that covers it hides it */
+{
+    if (web_wp_on && (int32_t)y == web_wp[1] && (int32_t)h == web_wp[2]) {
+        memcpy(web_ws, web_wp, sizeof web_ws);
+        web_wp_on = 0;
+    } else if (web_ws[0] && (int32_t)y < web_ws[1] + web_ws[2] && (int32_t)(y + h) > web_ws[1]) {
+        web_ws[0] = 0;
+    }
+}
 static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
 {
     uint32_t i, j;
     uint16_t sw = (uint16_t)((c >> 8) | (c << 8));
     CAST(cast_px(x | y << 8 | w << 16 | h << 24, c, 0, 0u));   /* ((Skiff Studio) as the unit's lcd.c) */
     WEB_LCD_HOOK(w * h);
+    web_scope_sent(y, h);
     for (j = 0; j < h && y + j < 240u; j++)
         for (i = 0; i < w && x + i < 240u; i++)
             web_fb[(y + j) * 240u + x + i] = sw;
@@ -170,6 +188,7 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
             web_fb[(y + j) * 240u + x + i] = p[j * w + i];
     CAST(cast_px(x | y << 8 | w << 16 | h << 24, 0u, p, w * h));
     WEB_LCD_HOOK(w * h);
+    web_scope_sent(y, h);
     web_draws++;
 }
 static void lcd_sync(void) {}
@@ -177,6 +196,7 @@ static void lcd_power(uint32_t s)              /* MENU > SCREEN OFF (lcd.c): off
 {
     if (!s) {
         memset(web_fb, 0, sizeof web_fb);
+        web_ws[0] = 0;
         web_draws++;
     }
 }
@@ -199,6 +219,15 @@ static int smk_trim_load(const uint8_t *rec) { (void)rec; return 0; }
 #include "../../firmware/src/ui_draw.c"
 #include "../../firmware/src/ui_menu.c"
 #include "../../firmware/src/ui_input.c"
+static void web_scope_note(uint16_t c, int32_t cy, int32_t half, int32_t x0, const int16_t *lv)
+{
+    uint32_t i;
+    web_wp[0] = 1; web_wp[1] = (int32_t)graph_y(); web_wp[2] = (int32_t)cv_h; web_wp[3] = cy; web_wp[4] = half; web_wp[5] = x0;
+    web_wp[6] = c; web_wp[7] = T_SURF;
+    for (i = 0; i < 36u; i++)
+        web_wp[8 + i] = lv[i];
+    web_wp_on = 1;
+}
 #include "../../firmware/src/ui_layer.c"
 
 /* ------------------------------------------------------------ the flash --- */
@@ -646,6 +675,7 @@ EXPORT uint32_t web_test_user_preset(uint32_t i) { return (uint32_t)up_used(i); 
 
 EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
+EXPORT int32_t *web_scope_data(void) { return web_ws; }   /* ((Vibe 1.2) see web_scope_note) */
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return song.playing; }
 EXPORT uint32_t web_sample_rate(void) { return FS; }
