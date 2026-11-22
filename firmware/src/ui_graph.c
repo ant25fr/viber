@@ -325,10 +325,13 @@ static void pr_split(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, uin
     int32_t k, pw = (w - (int32_t)hits + 1) / (int32_t)hits;
     if (hits < 2u) {
         cv_rect(x, y, w, h, c);
+        WEB_SOFT_DRAW(x, y + cv_oy, w, h, c, h >= 3 ? 5 : 0);
         return;
     }
-    for (k = 0; k < (int32_t)hits; k++)
+    for (k = 0; k < (int32_t)hits; k++) {
         cv_rect(x + k * (pw + 1), y, pw, h, c);
+        WEB_SOFT_DRAW(x + k * (pw + 1), y + cv_oy, pw, h, c, h >= 3 && pw >= 2 ? 5 : 0);
+    }
 }
 /* the bars of step s in column x (in its RATCH parts, hits; a TIE's carried bars: 1): a 1 px edge mark for a note
  * out of view; first: row y of the step's first note */
@@ -426,6 +429,8 @@ static void graph_roll(const track_t *t, uint16_t c)
             cv_rect(PR_KX, y, 9, PR_RH - 1, T_ACCENT);
         else
             cv_rect(PR_KX, y, KEY_BLACK[pc] ? 5 : 9, PR_RH - 1, KEY_BLACK[pc] ? T_DIM : T_RAISE);
+        WEB_SOFT_DRAW(PR_KX, y + cv_oy, (held >> r) & 1u ? 9 : KEY_BLACK[pc] ? 5 : 9, PR_RH - 1,
+                      (held >> r) & 1u ? T_ACCENT : KEY_BLACK[pc] ? T_DIM : T_RAISE, 4);
         if (pc == 0u) {
             cv_rect(PR_X0, y + PR_RH - 1, gw, 1, T_RAISE);
             note_name(nb, (uint32_t)n);

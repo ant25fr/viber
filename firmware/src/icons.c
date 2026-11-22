@@ -105,6 +105,7 @@ static int32_t cv_icon_on(int32_t x, int32_t y, uint32_t size, uint32_t id, uint
     cv_alpha_hc(x, y, size, size, size == 24u ? AI24_DATA + AI24_OFF[k] : size == 16u ? AI16_DATA + AI16_OFF[k] :
                 AI12_DATA + AI12_OFF[k], AI_HC, ramp(fg, bg));
     GFX_HOOK_ICON(x, y, size, id);
+    WEB_ICON_DRAW(x, y + cv_oy, size, id, fg, bg);
     if (GFX_HOOKS && icon_lint_ink) {                /* ((Skiff phase 6) a cell with no room for its empty margins) */
         int32_t b[4];
         icon_ink(size, id, b);

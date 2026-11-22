@@ -164,9 +164,23 @@ typedef struct { int16_t w[16 + WEB_TXT_LEN / 2u]; } web_txt_t;
 static web_txt_t web_tx[WEB_TXT_MAX], web_tp[WEB_TXT_MAX];
 static uint32_t web_tn, web_tpn;
 static int32_t web_ox, web_oy;
-#define WEB_TXT_BEGIN() (web_tpn = 0)
+/* ((Vibe 1.2) the curves) cv_line_t's segments that join (the envelope's, the LFO's, the waveform's) are kept as one
+ * polyline each: 8 16-bit words (the box it may show in, ink, thickness, points, 0), then the points as x y pairs (the
+ * top left of the pixel the line passes; the line is `thickness` rows down from there) */
+#define WEB_PL_MAX 24u
+#define WEB_PL_PTS 260u
+typedef struct { int16_t w[8 + 2u * WEB_PL_PTS]; } web_pl_t;
+static web_pl_t web_pl[WEB_PL_MAX], web_plp[WEB_PL_MAX];
+static uint32_t web_pln, web_plpn;
+#define WEB_TXT_BEGIN() (web_tpn = 0, web_plpn = 0)
 #define WEB_TXT_BLIT(x, y, r0) (web_ox = (int32_t)(x), web_oy = (int32_t)(y))
 #define WEB_TXT_DRAW(x, y, f, s, fg, bg, pen) web_txt_note((x), (y), (f), (s), (fg), (bg), (pen))
+#define WEB_SOFT_DRAW(x, y, w, h, c, r4) web_soft_note((x), (y), (w), (h), (c), (r4))
+static void web_soft_note(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, int32_t r4);
+#define WEB_ICON_DRAW(x, y, size, id, fg, bg) web_icon_note((x), (y), (size), (id), (fg), (bg))
+static void web_icon_note(int32_t x, int32_t y, uint32_t size, uint32_t id, uint16_t fg, uint16_t bg);
+#define WEB_LINE_DRAW(x0, y0, x1, y1, c, thick) web_line_note((x0), (y0), (x1), (y1), (c), (thick))
+static void web_line_note(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c, int32_t thick);
 #define WEB_ARC_DRAW(x, y, r, lo, hi, tr, vc, bg) web_arc_note((x), (y), (r), (lo), (hi), (tr), (vc), (bg))
 static void web_arc_note(int32_t x, int32_t y, int32_t r, int32_t lo, int32_t hi, uint16_t tr, uint16_t vc, uint16_t bg);
 #define WEB_RING_DRAW(cx, cy, ratio, fill, track, arc, body) web_ring_note((cx), (cy), (ratio), (fill), (track), (arc), (body))
@@ -225,6 +239,7 @@ static void lcd_power(uint32_t s)              /* MENU > SCREEN OFF (lcd.c): off
         memset(web_fb, 0, sizeof web_fb);
         web_ws[0] = 0;
         web_tn = 0;
+        web_pln = 0;
         web_draws++;
     }
 }
@@ -278,6 +293,58 @@ static void web_txt_note(int32_t x, int32_t y, const void *fp, const char *s, ui
     memset(&t->w[16], 0, WEB_TXT_LEN);
     memcpy(&t->w[16], s, n);
 }
+static void web_soft_note(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t c, int32_t r4)
+{
+    web_txt_t *t;
+    if (r4 <= 0 || web_tpn >= WEB_TXT_MAX)
+        return;
+    t = web_tpn ? &web_tp[web_tpn - 1u] : 0;
+    if (t && t->w[8] == 103 && t->w[5] == (int16_t)y && t->w[10] == (int16_t)h && t->w[6] == (int16_t)c &&
+        x >= t->w[4] && x <= t->w[4] + t->w[9]) {      /* a bar going on (a TIE's pieces): one, its ends rounded */
+        if (x + w > t->w[4] + t->w[9])
+            t->w[9] = (int16_t)(x + w - t->w[4]);
+        return;
+    }
+    t = &web_tp[web_tpn++];
+    memset(t, 0, sizeof *t);
+    t->w[0] = 0; t->w[1] = (int16_t)cv_cy0; t->w[2] = (int16_t)cv_w; t->w[3] = (int16_t)cv_cy1;
+    t->w[4] = (int16_t)x; t->w[5] = (int16_t)y; t->w[6] = (int16_t)c;
+    t->w[8] = 103;                                    /* (kind: a rectangle, its corners rounded) */
+    t->w[9] = (int16_t)w; t->w[10] = (int16_t)h; t->w[11] = (int16_t)r4;
+}
+static void icon_ink(uint32_t size, uint32_t id, int32_t *b);   /* (icons.c, below) */
+static void web_icon_note(int32_t x, int32_t y, uint32_t size, uint32_t id, uint16_t fg, uint16_t bg)
+{
+    web_txt_t *t;
+    int32_t b[4];
+    if (web_tpn >= WEB_TXT_MAX)
+        return;
+    icon_ink(size, id, b);
+    t = &web_tp[web_tpn++];
+    memset(t, 0, sizeof *t);
+    t->w[0] = 0; t->w[1] = (int16_t)cv_cy0; t->w[2] = (int16_t)cv_w; t->w[3] = (int16_t)cv_cy1;
+    t->w[4] = (int16_t)x; t->w[5] = (int16_t)y; t->w[6] = (int16_t)fg; t->w[7] = (int16_t)bg;
+    t->w[8] = 102;                                    /* (kind: an icon) */
+    t->w[9] = (int16_t)size; t->w[10] = (int16_t)id;
+    t->w[11] = (int16_t)b[0]; t->w[12] = (int16_t)b[1]; t->w[13] = (int16_t)b[2]; t->w[14] = (int16_t)b[3];
+}
+static void web_line_note(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c, int32_t thick)
+{
+    web_pl_t *p = web_plpn ? &web_plp[web_plpn - 1u] : 0;
+    if (p && p->w[4] == (int16_t)c && p->w[5] == (int16_t)thick && (uint32_t)p->w[6] < WEB_PL_PTS &&
+        p->w[8 + 2 * (p->w[6] - 1)] == (int16_t)x0 && p->w[9 + 2 * (p->w[6] - 1)] == (int16_t)y0) {
+        p->w[8 + 2 * p->w[6]] = (int16_t)x1;            /* the chain goes on */
+        p->w[9 + 2 * p->w[6]] = (int16_t)y1;
+        p->w[6]++;
+        return;
+    }
+    if (web_plpn >= WEB_PL_MAX)
+        return;
+    p = &web_plp[web_plpn++];
+    p->w[0] = 0; p->w[1] = (int16_t)cv_cy0; p->w[2] = (int16_t)cv_w; p->w[3] = (int16_t)cv_cy1;   /* (canvas coordinates until sent) */
+    p->w[4] = (int16_t)c; p->w[5] = (int16_t)thick; p->w[6] = 2; p->w[7] = 0;
+    p->w[8] = (int16_t)x0; p->w[9] = (int16_t)y0; p->w[10] = (int16_t)x1; p->w[11] = (int16_t)y1;
+}
 static void web_arc_note(int32_t x, int32_t y, int32_t r, int32_t lo, int32_t hi, uint16_t tr, uint16_t vc, uint16_t bg)
 {
     web_txt_t *t;
@@ -311,6 +378,34 @@ static void web_txt_sent(int32_t x, int32_t y, int32_t w, int32_t h, int take)  
             web_tx[k++] = web_tx[i];
     }
     web_tn = k;
+    for (i = 0, k = 0; i < web_pln; i++) {            /* the curves it covers are gone too */
+        const int16_t *q = web_pl[i].w;
+        if (!(q[0] < x + w && q[2] > x && q[1] < y + h && q[3] > y)) {
+            if (k != i) web_pl[k] = web_pl[i];
+            k++;
+        }
+    }
+    web_pln = k;
+    if (take && web_plpn) {
+        for (i = 0; i < web_plpn && web_pln < WEB_PL_MAX; i++) {
+            web_pl_t *d = &web_pl[web_pln], *sp = &web_plp[i];
+            int32_t x0 = sp->w[0] + web_ox, y0 = sp->w[1] + web_oy, x1 = sp->w[2] + web_ox, y1 = sp->w[3] + web_oy, j;
+            if (x0 < x) x0 = x;
+            if (y0 < y) y0 = y;
+            if (x1 > x + w) x1 = x + w;
+            if (y1 > y + h) y1 = y + h;
+            if (x1 <= x0 || y1 <= y0)
+                continue;
+            *d = *sp;
+            d->w[0] = (int16_t)x0; d->w[1] = (int16_t)y0; d->w[2] = (int16_t)x1; d->w[3] = (int16_t)y1;
+            for (j = 0; j < d->w[6]; j++) {
+                d->w[8 + 2 * j] += (int16_t)web_ox;
+                d->w[9 + 2 * j] += (int16_t)web_oy;
+            }
+            web_pln++;
+        }
+        web_plpn = 0;
+    }
     if (take && web_tpn) {
         for (i = 0; i < web_tpn && web_tn < WEB_TXT_MAX; i++) {
             web_txt_t t = web_tp[i];
@@ -794,6 +889,8 @@ EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
 EXPORT uint32_t web_text_n(void) { return web_tn; }   /* ((Vibe 1.2) the HD text: see web_txt_note) */
 EXPORT void *web_text_ptr(void) { return web_tx; }
+EXPORT uint32_t web_pl_n(void) { return web_pln; }
+EXPORT void *web_pl_ptr(void) { return web_pl; }
 EXPORT int32_t *web_scope_data(void) { return web_ws; }   /* ((Vibe 1.2) see web_scope_note) */
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return song.playing; }

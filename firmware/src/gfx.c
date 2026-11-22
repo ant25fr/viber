@@ -43,6 +43,9 @@ typedef struct { uint16_t off; uint8_t w; const char *label; } kc_t;
 #define WEB_TXT_BEGIN() ((void)0)
 #define WEB_TXT_BLIT(x, y, r0) ((void)0)
 #define WEB_TXT_DRAW(x, y, f, s, fg, bg, pen) ((void)0)
+#define WEB_SOFT_DRAW(x, y, w, h, c, r4) ((void)0)   /* (a rectangle the browser may round: the piano roll's keys and notes) */
+#define WEB_ICON_DRAW(x, y, size, id, fg, bg) ((void)0)   /* (an icon: icons.c cv_icon_on) */
+#define WEB_LINE_DRAW(x0, y0, x1, y1, c, thick) ((void)0)   /* (a thick line, a curve's segment: cv_line_t) */
 #define WEB_ARC_DRAW(x, y, r, lo, hi, tr, vc, bg) ((void)0)
 #define WEB_RING_DRAW(cx, cy, ratio, fill, track, arc, body) ((void)0)   /* (STYLE BLOCKS' knob: ui_blocks.c knob_ring) */   /* (a knob's ring: ui_graph.c knob_arc) */
 #endif
@@ -288,6 +291,7 @@ static void cv_line(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c)
 static void cv_line_t(int32_t x0, int32_t y0, int32_t x1, int32_t y1, uint16_t c, int32_t thick)
 {
     int32_t t;
+    WEB_LINE_DRAW(x0, y0 + cv_oy, x1, y1 + cv_oy, c, thick);
     for (t = 0; t < thick; t++)
         cv_line(x0, y0 + t, x1, y1 + t, c);
 }
