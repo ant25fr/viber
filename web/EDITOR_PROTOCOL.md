@@ -994,7 +994,7 @@ tile's top right corner cut.
 
 ## Arrangement (85; Vibe 1.1)
 
-`INFO 5A 01 caps` bit 0. The arrangement is the HOME page's third view on the device (DESIGN.md "The arrangement"): blocks
+`INFO 5A 01 caps` bit 0. The arrangement is the HOME page's second page on the device (DESIGN.md "The arrangement"): blocks
 `{track, bar, length, pattern}` of a timeline of its own, nothing of the clips (the lists, entries, chains and sounds are
 not read or written by it). A block is a pattern of the pool played from its bar for `length` bars (it loops through them);
 a track follows it from its first block, PLAY from the top, until a clip is launched on that track (`out`), BACK puts it

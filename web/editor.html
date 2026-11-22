@@ -288,6 +288,7 @@
   #scr-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
   #scr-screen { position: absolute; inset: 0; width: 100%; height: 100%; background: black;
                 image-rendering: pixelated; border-radius: 6px; cursor: zoom-in; }
+  #scr-screen.fx { image-rendering: auto; }   /* (Vibe 1.2) smooth / LCD: drawn at the display's own resolution (scrPaint) */
   #scr-dev.ctl #scr-screen { inset: auto; border-radius: 0; cursor: default; }
   #scr-wrap:fullscreen { background: black; }
   #scr-wrap:fullscreen #scr-dev { width: min(100vw, calc(100vh * var(--ar))); }
@@ -674,6 +675,8 @@
     <p class="bar"><button id="scr-start" data-t="scrStart"></button> <button id="scr-stop" data-t="scrStop" disabled></button>
       <button id="scr-full" data-t="scrFull"></button>
       <label><input type="checkbox" id="scr-ctl"> <span data-t="scrCtl"></span></label>
+      <label><span data-t="scrFx"></span> <select id="scr-fx"><option value="smooth" data-t="scrFxSmooth"></option>
+        <option value="lcd" data-t="scrFxLcd"></option><option value="net" data-t="scrFxNet"></option></select></label>
       <span id="scr-status" role="status" aria-live="polite"></span></p>
     <p class="dim" id="scr-keys" data-t="scrKeys" hidden></p>
     <div id="scr-wrap"><div id="scr-dev"><svg id="scr-svg" aria-hidden="true"></svg>
@@ -3879,7 +3882,7 @@ const TEXT = {
     tabScreen: "画面", scrTitle: "本体の画面",
     scrHelp: "スタートを押すとバックアップを取ってから FM-1 を再起動し、同じ瞬間から本体の画面をここに映します。曲はそのまま残ります。「全画面」で画面いっぱいに映し、「操作」で画面のまわりに FM-1 のパネルを出して、マウス・指・キーボードで FM-1 を操作できます（FM-1 の Skiff 2.7 以降）。",
     scrStart: "スタート", scrStop: "ストップ", scrNeedDev: "先に FM-1 を接続してください。",
-    scrFull: "全画面", scrExit: "全画面を終了", scrCtl: "操作", scrCtlNeedFw: "操作には FM-1 の Skiff 2.7 以降が必要です。",
+    scrFx: "表示", scrFxSmooth: "なめらか", scrFxLcd: "LCD グリッド", scrFxNet: "ドット", scrFull: "全画面", scrExit: "全画面を終了", scrCtl: "操作", scrCtlNeedFw: "操作には FM-1 の Skiff 2.7 以降が必要です。",
     scrNoPanel: "パネルの絵を読み込めませんでした。",
     scrKeys: "キーボード：Z〜' と Q〜O で鍵盤、1〜= でボタン（FX … REC）、[ ] で OCT、↑↓ で SELECT、←→ で ALGORITHM。ボタンは Shift＋クリックか右クリックで押したままになります（SHIFT は HOME を押したまま）。",
     scrNeedFw: "このファームウェアは画面を送れません。画面タブには Skiff 2.6 以降（FM-1）、Skiff 2.7 以降（SMK-37）が必要です。",
@@ -3978,7 +3981,7 @@ const TEXT = {
     noName: "(no name)", projNow: "Now", projChanged: "changed since saved",
     projRefused: "The device refused (an empty slot, or the patterns are full)", projFailed: "Saving failed on the device",
     play: "Play", stop: "Stop", playTitle: "Play (Shift+click: from the top)", playing: "Playing", stopped: "Stopped", countIn: "Count-in",
-    arTitle: "Arrangement", arHelp: "The timeline the HOME page's third view shows on the device: a block is a pattern of the pool on a track's bars, put wherever you like, nothing recorded from the clips. Drag a block to move it (to another track too), drag its right edge for its length, arrows move it (SHIFT: its length), Delete takes it off; Ctrl+Z undoes. Or click a track's row for a bar, a block to pick it; the pattern and length below, then PUT (a block there is replaced, the one it starts inside cut, its end where the next begins). A track a clip was launched on leaves the arrangement until BACK.",
+    arTitle: "Arrangement", arHelp: "The timeline the HOME page's second page (after the waveform) shows on the device: a block is a pattern of the pool on a track's bars, put wherever you like, nothing recorded from the clips. Drag a block to move it (to another track too), drag its right edge for its length, arrows move it (SHIFT: its length), Delete takes it off; Ctrl+Z undoes. Or click a track's row for a bar, a block to pick it; the pattern and length below, then PUT (a block there is replaced, the one it starts inside cut, its end where the next begins). A track a clip was launched on leaves the arrangement until BACK.",
     arMode: "Tracks follow", arModeArr: "ARR (the arrangement)", arModeClips: "CLIPS (the launcher)", arBack: "Back to the arrangement", arClear: "Clear all", arPut: "PUT", arDelete: "Delete block",
     arPattern: "Pattern", arLength: "Bars", arBar: "Bar", arOut: "a clip took it out", arFull: "The arrangement is full (128 blocks)", arBadPlace: "Not a place for a block", arNoSteps: "That pattern has no steps", arNoBlock: "No block there", arConfirmClear: "Clear the whole arrangement?", arUndo: "Undo", arRedo: "Redo", arZoom: "Zoom", arBlocked: "Another block is in the way",
     sgTab: "Song", sgHelp: "Each track plays the entries of its list (A to P), each naming a pattern of the pool, as on SEQ › SONG; the scenes and mutes are PERFORM's. Click an entry to pick it for the buttons below; double-click it (or PLAY) to put the track on it. The Sequencer tab edits the entry each track is on, and NEW puts the track on its new entry while stopped. Stopped, a change is at once; playing, at the LAUNCH point.",
@@ -4045,7 +4048,7 @@ const TEXT = {
     tabScreen: "Screen", scrTitle: "The FM-1's screen",
     scrHelp: "Start takes a backup of your FM-1, then restarts it, so that this copy starts at the same moment and shows its screen here as it changes. Your music is kept. Full screen fills the display; Controls draws the FM-1's panel round the screen, to work the FM-1 with the mouse, a finger or the keyboard (Skiff 2.7 or later on the FM-1).",
     scrStart: "Start", scrStop: "Stop", scrNeedDev: "Connect your FM-1 first.",
-    scrFull: "Full screen", scrExit: "Exit full screen", scrCtl: "Controls", scrCtlNeedFw: "Controls need Skiff 2.7 or later on the FM-1.",
+    scrFx: "Rendering", scrFxSmooth: "Smooth", scrFxLcd: "LCD grid", scrFxNet: "Sharp pixels", scrFull: "Full screen", scrExit: "Exit full screen", scrCtl: "Controls", scrCtlNeedFw: "Controls need Skiff 2.7 or later on the FM-1.",
     scrNoPanel: "The panel's drawing didn't load.",
     scrKeys: "Keyboard: Z–' and Q–O play the keys, 1–= the buttons (FX … REC), [ ] OCT, ↑ ↓ SELECT, ← → ALGORITHM. Shift-click or right-click holds a button down (SHIFT is HOME held).",
     scrNeedFw: "This firmware can't send its screen. The Screen tab needs Skiff 2.6 or later on an FM-1, 2.7 or later on an SMK-37.",
@@ -7903,7 +7906,40 @@ $("fm6export").addEventListener("click", () => downloadBytes(`${fileSlug(FM6.nam
    editor.c, compiled in), so what the other tabs change, the copy changes too. */
 const scr = { state: "idle", wasm: null, wasmName: "", copy: null, queue: [], seq: -1, lost: 0, log: false, pump: 0, timer: 0,
   draws: -1, sayAt: 0, wake: null };              /* state: idle; prep (backup, restart); back (restarting); start; on */
-const scrCtx = $("scr-screen").getContext("2d"), scrImg = scrCtx.createImageData(240, 240);
+/* ((Vibe 1.2) the 240 x 240 picture is kept on a canvas of its own and painted at the display's resolution: smooth = sharp
+ * bilinear (whole-pixel steps, then a soft last step), lcd = the same with the panel's pixel grid, net = the plain squares) */
+const scrCv = $("scr-screen"), scrCtx = scrCv.getContext("2d"), scrSrc = document.createElement("canvas"), scrMid = document.createElement("canvas");
+scrSrc.width = scrSrc.height = 240;
+const scrSrcCtx = scrSrc.getContext("2d"), scrImg = scrSrcCtx.createImageData(240, 240);
+let scrFx = (() => { try { const v = localStorage.getItem("scrFx"); return v === "net" || v === "lcd" ? v : "smooth"; } catch (e) { return "smooth"; } })();
+function scrPaint() {
+  const cv = scrCv;
+  cv.classList.toggle("fx", scrFx !== "net");
+  if (scrFx === "net") {
+    if (cv.width !== 240) cv.width = cv.height = 240;
+    scrCtx.drawImage(scrSrc, 0, 0);
+    return;
+  }
+  const W = Math.max(240, Math.round(cv.clientWidth * (window.devicePixelRatio || 1))), k = Math.max(1, Math.ceil(W / 240));
+  if (cv.width !== W) cv.width = cv.height = W;
+  const m = scrMid.getContext("2d");
+  if (scrMid.width !== 240 * k) scrMid.width = scrMid.height = 240 * k;
+  m.imageSmoothingEnabled = false;
+  m.drawImage(scrSrc, 0, 0, 240 * k, 240 * k);                 /* whole-pixel steps: the pixels' edges stay crisp .. */
+  scrCtx.imageSmoothingEnabled = true;
+  scrCtx.imageSmoothingQuality = "high";
+  scrCtx.drawImage(scrMid, 0, 0, W, W);                        /* .. the last step down to the display is smooth */
+  if (scrFx === "lcd" && W >= 480) {                           /* the pixel grid: a dark line between every two pixels */
+    const q = W / 240, lw = Math.max(1, Math.round(q / 6));
+    scrCtx.fillStyle = "rgba(0,0,0,.35)";
+    for (let i = 1; i < 240; i++) {
+      const x = Math.round(i * q - lw / 2);
+      scrCtx.fillRect(x, 0, lw, W);
+      scrCtx.fillRect(0, x, W, lw);
+    }
+  }
+}
+try { new ResizeObserver(() => scrPaint()).observe(scrCv); } catch (e) { /* no observer: painted at each new picture */ }
 function scrSay(text, bad = false) { $("scr-status").textContent = text; $("scr-status").classList.toggle("bad", bad); }
 function scrButtons() { $("scr-start").disabled = scr.state !== "idle"; $("scr-stop").disabled = scr.state === "idle"; }
 const scrSmk = () => !!(dev && dev.info && dev.info.cast & 4);   /* (2.7) an SMK-37's cast: its copy, no panel yet */
@@ -8043,7 +8079,8 @@ function scrDraw() {
       px[i * 4 + 2] = (p & 31) * 255 / 31;
       px[i * 4 + 3] = 255;
     }
-    scrCtx.putImageData(scrImg, 0, 0);
+    scrSrcCtx.putImageData(scrImg, 0, 0);
+    scrPaint();
   }
   if (tab === "screen" && pnl.layout && c.web_lit_buttons) {   /* ((2.7) the panel's LEDs: the copy's, as its screen) */
     const v = [c.web_lit_buttons(), c.web_lit_keys(), c.web_dim_buttons(), c.web_dim_keys(), c.web_breath_buttons(),
@@ -8300,6 +8337,12 @@ $("scr-stop").addEventListener("click", () => scrStop(t("scrStopped"), true, fal
 $("scr-full").addEventListener("click", scrFull);
 $("scr-exit").addEventListener("click", scrFull);
 $("scr-screen").addEventListener("click", () => { if (!pnl.layout) scrFull(); });   /* (the screen alone: a tap, as before) */
+$("scr-fx").value = scrFx;
+$("scr-fx").addEventListener("change", () => {
+  scrFx = $("scr-fx").value;
+  try { localStorage.setItem("scrFx", scrFx); } catch (e) { /* private window */ }
+  scrPaint();
+});
 $("scr-ctl").addEventListener("change", () => pnlShow($("scr-ctl").checked));
 try { if (localStorage.getItem("skiff-screen-controls")) pnlShow(true); } catch (e) { /* none kept */ }
 scrButtons();

@@ -19,7 +19,7 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> and an <b>arran
 
 - **Wavetable engine (WAVE)**: 8 tables of 16 single-cycle frames, scanned with TABLE, with WAVE, SUB and DETUNE; the screen draws the table as a 3D stack with the current frame highlighted.
 - **Clips mode (SEQ › CLIPS)**: each track's clips drawn at double width and split over 2 pages, launched with OCT+ or a whole column at once.
-- **Arrangement (HOME, third view)**: a timeline of patterns on the bars of each track, apart from the clips; KNOB 1 the pattern, KNOB 2 its length, KNOB 3 moves it, PRESETS the bar, OCT+ puts it, SHIFT + EDIT deletes; a clip launched takes its track out until OCT- brings it back. Saved with the project, edited in the web editor's Song tab.
+- **Arrangement (HOME, second page)**: a timeline of patterns on the bars of each track, apart from the clips; KNOB 1 the pattern, KNOB 2 its length, KNOB 3 moves it, PRESETS the bar, OCT+ puts it, SHIFT + EDIT deletes; a clip launched takes its track out until OCT- brings it back. Saved with the project, edited in the web editor's Song tab.
 - **Ableton-style knobs**: the 4 settings of every page as round knobs at the bottom of the screen.
 - **Master VU meter** in the header, left of the battery.
 
@@ -37,7 +37,7 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> and an <b>arran
 </table>
 
 <p align="center"><b>New in 1.2:</b> an <b>arrangement</b>, a timeline of its own as in Ableton Live, kept apart from the clips:
-HOME, tapped again after the scope, shows a row a track and the bars across; put a pattern on any bars, move it with KNOB 3,
+HOME opens on the waveform; tapped again it shows a row a track and the bars across; put a pattern on any bars, move it with KNOB 3,
 and the tracks follow it. The Song tab of the editor draws the same timeline (drag, resize, zoom, undo, a playhead) and
 holding HOME names every control of it ·
 <a href="https://github.com/ant25fr/viber/releases">the releases</a><br>
@@ -116,7 +116,7 @@ Edge, over USB MIDI).
 | **Recording** | live with overdub, FEEL (keeps where you played), count-in and click; step recording; TAKE keeps the last loop you played, after the fact; (2.5) FREE TAKE: play with the transport stopped, and Skiff finds the tempo, the bars and the first beat |
 | **Automation** | knob moves and parameter locks (hold a step, turn a knob), 64 records, listed and edited on SEQ › AUTOMATION |
 | **Patterns and clips** | a pool of 64 patterns shared by every project; each track a grid of 16 entries (A–P), each a clip: a pattern (or a REST = silence), or chained into the next as one long pattern; the CLIPS page (was SONG) launches any clip with OCT+, a whole column at once with SHIFT + PLAY, each at the LAUNCH point — nothing auto-advances |
-| **Arrangement** | HOME's third view: patterns put on the bars of each track (up to 128 blocks over 255 bars), a timeline of its own beside the clips; KNOB 3 moves a block; saved with the project; drawn and edited, with a playhead, in the editor's Song tab |
+| **Arrangement** | HOME's second page, after the waveform and before the tracks: patterns put on the bars of each track (up to 128 blocks over 255 bars), a timeline of its own beside the clips; KNOB 3 moves a block; saved with the project; drawn and edited, with a playhead, in the editor's Song tab |
 | **Performance** | PERFORM: launch any track's entries and stage mutes on LOOP, BAR, BEAT or NOW; 16 scenes; throws (CUTOFF, REVERB, DELAY, DIST) that glide back, or stay; one mute a track on the black keys of GLO, FX and PERFORM (a tap latches it, held it cuts); the FX layer: repeat, reverse, filter sweeps, tape stop, freeze, harmonizer, gate, dub echo, flanger, vinyl |
 | **Sound** | per track: an envelope (in milliseconds or note values) and a second one for modulation (ENV 2), an LFO (free or synced to the tempo), one MOD page for where they go (the LFO's four depths, the envelope's three, a 4-slot modulation matrix), DIST in five types (INSERT's SOFT, HARD, FOLD, CRUSH, FUZZ) with a TONE, an INSERT (drives, a bitcrusher, phaser, flanger, chorus, (2.5) a filter from low-pass to high-pass) with MIX, the SLICER (16 patterns), DUCK (sidechain), SPREAD (the voices across the stereo field); a drum kit's lanes tuned, their decay set and (2.0) panned one by one; arpeggiator (14 modes), chord keys (9 chords, 5 voicings, (2.5) strummed), 16 scales; MONO, LEGATO, UNISON, glide |
 | **Effects** | chorus (CHORUS, FLANGER or PHASER, with FEEDBACK), delay and reverb (ROOM, SPRING or a stereo HALL) as sends; (2.5) the delay MONO, STEREO or PING, each track's PAN reaching it, and with STEREO or PING the chorus's CHORUS and FLANGER in stereo |

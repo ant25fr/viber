@@ -308,7 +308,7 @@ static void fmt_kn(char *b, int32_t k, int32_t n)
 static struct {
     uint8_t home;
     uint8_t home_scope;          /* Skiff: HOME's panel the scope (HOME tapped on HOME) instead of the tracks (ui_home.c);
-                                  * (Vibe 1.1) 2: the arrangement (arr_view) */
+                                  * (Vibe 1.1) 2: the arrangement (arr_view); HOME cycles scope, arrangement, tracks (1, 2, 0) and boots on the scope */
     uint8_t ar_bar, ar_pat, ar_len1, ar_win;   /* (Vibe 1.1) the arrangement view: the bar the cursor is on, the pattern
                                   * and length (minus 1) KNOB 1 and 2 hold for OCT+, the first bar shown (ui_home.c) */
     uint8_t take_t;              /* Skiff: the TAKE box's frames left (ui_take.c; a message ends it) */

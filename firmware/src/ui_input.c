@@ -2616,7 +2616,7 @@ static void ui_input(void)
         layer_unlock();                                 /* ((Skiff U2) HOME tapped: a locked layer closes, as before) */
     if (home == BT_TAP && ui.home) {                    /* Skiff: HOME on HOME, the tracks <-> the scope (ui_home.c) */
         ui.home_scope = (uint8_t)(ui.home_scope >= (large_kind() == LK_TALL ? 1u : 2u) ? 0u : ui.home_scope + 1u);   /* ((Vibe
-                                                         * 1.1) the tracks, the scope, the arrangement) */
+                                                         * 1.2) the scope, the arrangement, the tracks: 1, 2, 0) */
         ui.force = 1;
         if (arr_view()) {
             arr_scroll();

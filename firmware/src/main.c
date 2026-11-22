@@ -125,6 +125,7 @@ static void felucca_init(void)
     sel_set(0);
     song.master_q12 = 2048;                   /* (the pot's level replaces it before the audio starts: master_boot) */
     ui.home = 1;
+    ui.home_scope = 1;                        /* ((Vibe 1.2) HOME opens on the waveform; HOME again: the arrangement, then the tracks) */
     ui.force = 1;
 }
 
