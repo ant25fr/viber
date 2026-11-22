@@ -1453,11 +1453,197 @@ static int song_chain(void)
     return bad;
 }
 
+/* (Vibe 1.1, the arrangement) a pattern staged by its id (stage_pattern, arr 1): it comes in on the bar as an entry's
+ * does, and the clip the track is on stays where it was (lists.cur, no entry's sound or chain bookkeeping) */
+static int arr_stage(void)
+{
+    int bad = 0, ok;
+    uint32_t c, w;
+    track_t *t = &trk[0];
+    fresh();
+    simple(0, 80, 8, DIR_FWD);                    /* C: 8 steps, notes 80.. */
+    bank_put(0, 2, 0);
+    lv_start(LAUNCH_BAR);
+    w = lists.cur[0];
+    c = ent_pat(0, 2);
+    lv_next(5);
+    ok = stage_pattern(0, 0, c, 0, LAUNCH_BAR, 0, 0, 1) == 0 && launch_q[0].arr == 1u && launch_q[0].slot == BK_NONE &&
+         bank_next(0) == BK_NONE;
+    lv_next(10);                                  /* the run's step 16: W's 4th, its second pass */
+    ok &= sounds(43);
+    lv_next(1);
+    ok &= sounds(80) && t->seq_idx == 0 && launch_q[0].done;
+    bad += check("arrangement: a pattern staged by its id comes in on the bar, as an entry's", ok);
+    bank_poll();
+    ok = !launch_q[0].done && launch_q[0].arr == 0u && lists.cur[0] == w && bank_cur(0) == BK_NONE &&
+         trk_pat(0) == c && lists.ent[0][w % NENT][0] != 0;
+    bad += check("  the track is on that pattern, the clip it was on stays (lists.cur, its entry; CLIPS shows none lit)", ok);
+    return bad;
+}
+
+/* (Vibe 1.1, the arrangement) the blocks: put replaces the one on its bar, cuts the one it starts inside, ends where the
+ * next begins; sorted by track and bar; delete by bar; full and bad places refused */
+static int arr_model(void)
+{
+    int bad = 0, ok;
+    uint32_t i;
+    fresh();
+    arr_clear();
+    ok = arr_put(0, 2, 5, 3) == 0 && arr_find(0, 2) == 0 && arr_find(0, 4) == 0 && arr_find(0, 5) < 0 && arr_find(1, 3) < 0 &&
+         arr_bars() == 5u && (arr_has & 1u) && !(arr_has & 2u);
+    ok &= arr_put(0, 3, 6, 4) == 0 && arr_n == 2u && arr[0].len == 1u && arr[1].start == 3u && arr[1].len == 4u &&
+          arr_bars() == 7u;                       /* (the first cut where the second begins) */
+    ok &= arr_put(0, 3, 7, 2) == 0 && arr_n == 2u && arr[1].pat == 7u && arr[1].len == 2u;   /* (replaced: its bar) */
+    ok &= arr_put(0, 0, 9, 9) == 0 && arr_n == 3u && arr[0].start == 0u && arr[0].len == 2u && arr[1].start == 2u &&
+          arr[2].start == 3u;                     /* (ends where the next begins, sorted) */
+    ok &= arr_put(1, 1, 3, 2) == 0 && arr[3].trk == 1u && arr[3].start == 1u && (arr_has & 2u);
+    bad += check("arrangement: put replaces, cuts and ends at the next block; sorted by track and bar", ok);
+    ok = arr_del(0, 3) == 1 && arr_find(0, 3) < 0 && arr_del(0, 3) == 0 && arr_n == 3u && arr_del(1, 2) == 1 &&
+         !(arr_has & 2u);
+    bad += check("  delete by bar; a track with no block is not followed", ok);
+    ok = arr_put(NTRK, 0, 1, 1) == 2 && arr_put(0, ARR_BARS, 1, 1) == 2 && arr_put(0, 0, NPAT, 1) == 2 &&
+         arr_put(0, 0, 1, 0) == 2 && arr_put(0, 250, 1, 99) == 0 && arr_bars() == ARR_BARS;
+    arr_clear();
+    for (i = 0; i < ARR_MAX; i++)
+        ok &= arr_put(i % NTRK, i / NTRK * 2u, 1, 1) == 0;
+    ok &= arr_n == ARR_MAX && arr_put(0, 100, 1, 1) == 1 && arr_put(0, 0, 2, 1) == 0 && arr_n == ARR_MAX;
+    bad += check("  not a place: refused; the last bar clipped; 128 blocks, then ARRANGEMENT FULL (a replace still goes)", ok);
+    arr_clear();
+    return bad;
+}
+
+/* (Vibe 1.1) the arrangement played: PLAY from the top starts the first bar's blocks, each next block comes in on its
+ * bar line, a rest where one ends; a launched clip takes the track out; the clips are as they were */
+static void arr_step(uint32_t n)
+{
+    while (n--) {
+        lv_next(1);
+        bank_poll();
+        arr_poll();
+    }
+}
+static int arr_play(void)
+{
+    int bad = 0, ok;
+    uint32_t a, b, w;
+    fresh();
+    arr_clear();
+    simple(0, 60, 16, DIR_FWD);                   /* A: one bar, notes 60.. */
+    bank_put(0, 1, 0);
+    simple(0, 80, 16, DIR_FWD);                   /* B: one bar, notes 80.. */
+    bank_put(0, 2, 0);
+    a = ent_pat(0, 1);
+    b = ent_pat(0, 2);
+    ok = arr_put(0, 0, a, 2) == 0 && arr_put(0, 2, b, 1) == 0;
+    ui_launch = LAUNCH_LOOP;                      /* (the clips' own point: the arrangement goes by the bar) */
+    (void)ent_go(0, 1);
+    w = lists.cur[0];
+    chain_top();                                  /* (PLAY's: the arrangement's first bar) */
+    transport_req = 1;
+    events_block(1);
+    ok &= trk_pat(0) == a && sounds(60) && launch_steps == 0u;
+    arr_poll();
+    arr_step(15);
+    ok &= sounds(75);                             /* (bar 1's last step) */
+    arr_step(1);
+    ok &= sounds(60);                             /* (A's second bar: it loops) */
+    arr_step(15);
+    arr_step(1);
+    ok &= sounds(80) && launch_steps == 32u;      /* (bar 3: B comes in on the bar line) */
+    arr_step(15);
+    ok &= sounds(95);
+    arr_step(1);
+    ok &= trk[0].seq_n == 0u;                     /* (bar 4: B ends with nothing after it: silence) */
+    bad += check("arrangement: PLAY starts bar 1's block, the next comes in on its bar line, a rest where one ends", ok);
+    bank_poll();
+    ok = lists.cur[0] == w && lists.ent[0][w % NENT][0] != 0 && (arr_off & 1u) == 0 && !launch_q[0].arr;
+    bad += check("  the clips are as they were (the entry the track was on, no launch recorded)", ok);
+    ok = bank_switch(0, 1) == 0 && (arr_off & 1u) && !arr_drives(0);
+    bank_cancel(0);
+    arr_off = 0;
+    bad += check("  a clip launched takes the track out of the arrangement (back to it: arr_off cleared)", ok && arr_drives(0));
+    transport_req = 2;
+    events_block(1);
+    arr_clear();
+    return bad;
+}
+
+/* (Vibe 1.1) the arrangement kept with the project: after its SKF4 record in the same flash object; back with it, kept
+ * by a rename, none where a project had none, a NEW project has none; a torn or damaged tail is no arrangement; the
+ * record with its tail is still the project to firmware that reads only the SKF4 */
+static int arr_project(void)
+{
+    int bad = 0, ok, n;
+    static uint8_t raw[3840], buf[ARR_TRAILER_MAX + 8];
+    static project_t pj;
+    uint32_t a, b, s, l, p, h;
+    fresh();
+    arr_clear();
+    simple(0, 50, 16, DIR_FWD);
+    bank_put(0, 1, 0);
+    simple(0, 70, 16, DIR_FWD);
+    bank_put(0, 2, 0);
+    a = ent_pat(0, 1);
+    b = ent_pat(0, 2);
+    ok = arr_put(0, 0, a, 4) == 0 && arr_put(0, 6, b, 2) == 0 && arr_put(3, 2, a, 5) == 0 && project_save_as(1, 0) == 0;
+    n = st_load(OBJ_PROJECT0 + 1, raw, sizeof raw);
+    ok &= n == (int)(PROJ_STORE4 + 12u + 4u * 3u) && proj_import(&pj, raw, n);   /* (an SKF4 to firmware before) */
+    arr_clear();
+    arr_off = 5u;
+    project_load(1);
+    ok &= arr_n == 3u && arr_at(0, 0, &s, &l, &p) && s == 0u && l == 4u && p == a && arr_at(0, 7, &s, &l, &p) &&
+          s == 6u && l == 2u && p == b && arr_at(3, 3, &s, &l, &p) && s == 2u && l == 5u && p == a && arr_off == 0u &&
+          arr_on == 1u;
+    bad += check("arrangement: kept after the project's record, back when it loads (the clip exits cleared)", ok);
+    ok = project_rename(1, "RENAMED") == 0;
+    arr_clear();
+    project_load(1);
+#if FELUCCA_LEGACY                                   /* (the converter's build packs a 3840-byte record: no tail kept; it never renames) */
+    ok = 1;
+#else
+    ok &= arr_n == 3u && arr_at(3, 4, &s, &l, &p) && p == a;
+#endif
+    bad += check("  a rename keeps it", ok);
+    arr_clear();
+    ok = project_save_as(2, 0) == 0 && st_load(OBJ_PROJECT0 + 2, raw, sizeof raw) == (int)PROJ_STORE4;
+    (void)arr_put(1, 1, b, 1);
+    project_load(2);
+    ok &= arr_n == 0u;
+    bad += check("  a project with none is the SKF4 alone, and loading it leaves none", ok);
+    (void)arr_put(0, 0, a, 2);
+    project_new();
+    ok = arr_n == 0u;
+    bad += check("  a NEW project has none", ok);
+    (void)arr_put(0, 0, a, 4);
+    (void)arr_put(0, 6, b, 2);
+    n = (int)arr_pack(buf);
+    ok = n == 12 + 8 && arr_unpack(buf, (uint32_t)n) == 1 && arr_n == 2u;
+    buf[9] ^= 1u;                                    /* a damaged byte */
+    ok &= arr_unpack(buf, (uint32_t)n) == 0 && arr_n == 0u;
+    buf[9] ^= 1u;
+    ok &= arr_unpack(buf, (uint32_t)n - 1u) == 0 && arr_n == 0u;   /* torn */
+    ok &= arr_unpack(buf, 0u) == 0;
+    buf[11] = (uint8_t)NPAT;                         /* a pattern that is not one, the hash made right */
+    h = proj_hash(buf, 8u + 4u * 2u);
+    memcpy(buf + 16, &h, 4);
+    ok &= arr_unpack(buf, (uint32_t)n) == 0 && arr_n == 0u;
+    buf[11] = (uint8_t)a;
+    buf[8 + 4 + 0] = 3;                              /* blocks out of order (a track 3, then 0) */
+    buf[8 + 0] = 3;
+    buf[8 + 4] = 0;
+    h = proj_hash(buf, 8u + 4u * 2u);
+    memcpy(buf + 16, &h, 4);
+    ok &= arr_unpack(buf, (uint32_t)n) == 0 && arr_n == 0u;
+    bad += check("  a damaged, torn or impossible tail is no arrangement (cleared), not an error", ok);
+    arr_clear();
+    return bad;
+}
+
 int main(void)
 {
     int bad = layout() + fidelity() + keep() + entries() + staged_all() + last_track() + torn() + wear_and_wrap() +
               playing() + live() + scenes() + scenes_six() + song_test() + song_six() + song_rest() +
-              song_chain() + song_sound() + song_same() + song_next_edit() + migrate() + dx_kit_project();
+              song_chain() + song_sound() + song_same() + song_next_edit() + migrate() + dx_kit_project() + arr_stage() + arr_model() + arr_play() + arr_project();
     printf("%s\n", bad ? "BANK TEST FAILED" : "pattern bank tests passed");
     return bad != 0;
 }

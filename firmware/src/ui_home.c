@@ -100,3 +100,73 @@ static void graph_tracks(void)
         y += h + 3;
     }
 }
+
+/* ---- (Vibe 1.1) HOME's third panel, the arrangement (bank.c arr_*; ui_input.c arr_*): a row a track, the bars across,
+ * ARR_VIS of them from ui.ar_win; a block of a pattern a tile in its track's colour (the pattern's number in it, DIM
+ * when the track left the arrangement for a clip), the selected track's row raised; the cursor an outline of the block
+ * OCT+ would put (the length KNOB 2 holds), its bar marked under the ruler's numbers (every 4th bar), the playhead a line */
+#define AR_X0 20
+#define AR_BW 9                                       /* 24 bars of 9 px: to the panel's right edge, 236 */
+#define AR_RULER 12
+#define AR_RH 19
+static uint32_t arr_sig_view(void)
+{
+    return arr_sig() * 31u + ((uint32_t)ui.ar_bar | (uint32_t)ui.ar_pat << 8 | (uint32_t)ui.ar_len1 << 16 |
+                              (uint32_t)ui.ar_win << 24) * 2654435761u + song.sel * 977u +
+           (song.playing ? launch_steps + 1u : 0u) * 7919u + ux.gen * 131u;
+}
+static void graph_arr(void)
+{
+    uint32_t k, n, st, ln, pt, w0, ph = launch_steps / 16u;
+    static uint32_t last_ph = 0xFFFFu;
+    int32_t y, x1, x2, cx, cw, rows_h = 6 * (AR_RH + 1);
+    char b[8];
+    if (song.playing && ph != last_ph && (ph < ui.ar_win || ph >= (uint32_t)ui.ar_win + ARR_VIS))   /* (the playhead
+                                                       * leaves what is shown: on to it, a page of four-bar steps) */
+        ui.ar_win = (uint8_t)(ph / 4u * 4u > ARR_BARS - ARR_VIS ? ARR_BARS - ARR_VIS : ph / 4u * 4u);
+    last_ph = ph;
+    w0 = ui.ar_win;
+    cv_rect(0, 0, 240, (int32_t)graph_h(), T_BG);
+    for (k = 0; k < NTRK; k++) {                      /* the rows */
+        int sel = k == song.sel;
+        uint16_t col = T_TRK(k), bg = sel ? T_RAISE : T_SURF, dim = ux_mix(col, T_BG, 55);
+        char d[2] = {(char)('1' + k), 0};
+        y = AR_RULER + (int32_t)k * (AR_RH + 1);
+        cv_rect(3, y, 234, AR_RH, bg);
+        if (sel)
+            cv_rect(3, y, 16, AR_RH, col);
+        cv_text_on(3 + (16 - text_w(&AF_M, d)) / 2, y + CAP_IN(M, AR_RH), &AF_M, d, sel ? T_INK : col, sel ? col : bg);
+        for (n = 0; n < ARR_VIS; n++)                 /* (the bar lines: the fours stronger) */
+            cv_rect(AR_X0 + (int32_t)n * AR_BW, y, 1, AR_RH, (w0 + n) % 4u == 0 ? T_LINE : T_GRID);
+        for (n = 0; arr_nth(k, n, &st, &ln, &pt); n++) {
+            if (st + ln <= w0 || st >= w0 + ARR_VIS)
+                continue;
+            x1 = AR_X0 + ((int32_t)(st > w0 ? st : w0) - (int32_t)w0) * AR_BW;
+            x2 = AR_X0 + ((int32_t)(st + ln < w0 + ARR_VIS ? st + ln : w0 + ARR_VIS) - (int32_t)w0) * AR_BW;
+            cv_rect(x1, y + 1, x2 - x1 - 1, AR_RH - 2, arr_drives(k) ? col : dim);
+            if (st >= w0 && x2 - x1 >= 15) {          /* (its pattern, where it starts and there is room) */
+                pat_num(b, pt);
+                cv_text_on(x1 + 2, y + CAP_IN(S, AR_RH), &AF_S, b, T_INK, arr_drives(k) ? col : dim);
+            }
+        }
+    }
+    for (n = 0; n < ARR_VIS; n += 4u) {               /* the ruler: the first bar of every four */
+        fmt_int(b, (int32_t)(w0 + n) + 1);
+        cv_text_on(AR_X0 + (int32_t)n * AR_BW + 2, CAP_IN(S, AR_RULER - 3), &AF_S, b, T_MID, T_BG);
+    }
+    if (ui.ar_bar >= w0 && ui.ar_bar < w0 + ARR_VIS) {   /* the cursor: its bar under the ruler, and the block's outline */
+        cx = AR_X0 + ((int32_t)ui.ar_bar - (int32_t)w0) * AR_BW;
+        cw = (int32_t)((uint32_t)ui.ar_len1 + 1u);
+        if ((int32_t)ui.ar_bar + cw > (int32_t)(w0 + ARR_VIS))
+            cw = (int32_t)(w0 + ARR_VIS) - (int32_t)ui.ar_bar;
+        cw *= AR_BW;
+        y = AR_RULER + (int32_t)song.sel * (AR_RH + 1);
+        cv_rect(cx, AR_RULER - 3, AR_BW, 2, T_ACCENT);
+        cv_rect(cx, y, cw, 1, T_ACCENT);
+        cv_rect(cx, y + AR_RH - 1, cw, 1, T_ACCENT);
+        cv_rect(cx, y, 1, AR_RH, T_ACCENT);
+        cv_rect(cx + cw - 1, y, 1, AR_RH, T_ACCENT);
+    }
+    if (song.playing && launch_steps >= w0 * 16u && launch_steps < (w0 + ARR_VIS) * 16u)   /* the playhead */
+        cv_rect(AR_X0 + (int32_t)((launch_steps - w0 * 16u) * AR_BW / 16u), AR_RULER, 1, rows_h, T_TEXT);
+}

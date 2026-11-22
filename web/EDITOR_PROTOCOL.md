@@ -198,7 +198,7 @@ at 1..3 and hides 6 5 8: what it sets still plays the right kit, and the device 
 
 | cmd | Request args | Reply args |
 | --- | --- | --- |
-| 1 INFO | — | version string, NENGINES, P_COUNT, G_COUNT, NSTEP, P_E0, then NENGINES engine-name strings, then (v3) NTRK (4; Skiff phase 6: 6), then (v6) CHAIN_ROWS (16), then the tagged blocks `55 01 uiCaps`, `4D 01 64 01`, `42 01 3`, `46 01 nfactory nbank`, `53 01 3`, (1.0.3) `50 01 3` and (1.0.4) `4E 01 count` (MENU settings; 12, 1.1: 15, 1.2: 17, 1.1.5: 18, Skiff U2: 16) and (1.0.5) `52 01 4` (ratchet) and (1.1) `4C 01 1` (parameter locks) and (Skiff phase 6) `54 01 tracks e0 e1 e2` (light tracks) (below) and (Skiff W1) `43 01 count` (a step's FLAM, COND, NUDGE; count: the trig conditions) and (Skiff W3) `4B 01 8` (the DRUM-X kit, below) and (Skiff W3) `57 01 caps` (bit 0 TRANSPORT, bit 1 PROJ_NAME, bit 2 POOL, bit 3 LIST, bit 4 PERFORM, (#21) bit 5 SMP_MIX, (2.0) bit 6 a step's ties, below) and (Skiff 1.3) `49 01 c0 c1 e0 e1` (wide ids: P_COUNT and P_E0, above) and (2.0) `58 01 caps` (bit 0: LIST2, NEW, COPY+, CHAIN, SONG ONCE, the pool's EMPTY and CLEAR UNUSED; (#30) bit 1: the entries' sounds, LIST2's op 9 and its reply's sound bytes; "Pool, lists, PERFORM" below) ; older firmware ends earlier |
+| 1 INFO | — | version string, NENGINES, P_COUNT, G_COUNT, NSTEP, P_E0, then NENGINES engine-name strings, then (v3) NTRK (4; Skiff phase 6: 6), then (v6) CHAIN_ROWS (16), then the tagged blocks `55 01 uiCaps`, `4D 01 64 01`, `42 01 3`, `46 01 nfactory nbank`, `53 01 3`, (1.0.3) `50 01 3` and (1.0.4) `4E 01 count` (MENU settings; 12, 1.1: 15, 1.2: 17, 1.1.5: 18, Skiff U2: 16) and (1.0.5) `52 01 4` (ratchet) and (1.1) `4C 01 1` (parameter locks) and (Skiff phase 6) `54 01 tracks e0 e1 e2` (light tracks) (below) and (Skiff W1) `43 01 count` (a step's FLAM, COND, NUDGE; count: the trig conditions) and (Skiff W3) `4B 01 8` (the DRUM-X kit, below) and (Skiff W3) `57 01 caps` (bit 0 TRANSPORT, bit 1 PROJ_NAME, bit 2 POOL, bit 3 LIST, bit 4 PERFORM, (#21) bit 5 SMP_MIX, (2.0) bit 6 a step's ties, below) and (Skiff 1.3) `49 01 c0 c1 e0 e1` (wide ids: P_COUNT and P_E0, above) and (2.0) `58 01 caps` (bit 0: LIST2, NEW, COPY+, CHAIN, SONG ONCE, the pool's EMPTY and CLEAR UNUSED; (#30) bit 1: the entries' sounds, LIST2's op 9 and its reply's sound bytes; "Pool, lists, PERFORM" below) and (Vibe 1.1) `5A 01 caps` (bit 0: the arrangement, 85, "Arrangement" below; last after `59 01` where there is one) ; older firmware ends earlier |
 | 2 GET | scope, id | scope, id, v14 |
 | 3 SET | scope, id, v14 | scope, id, v14 (the value after clamping). Setting global `G_ENGSEL` (id from DESC label "ENG") changes the engine: its defaults, then its first preset (as on the device) |
 | 4 DUMP | — | engine, preset, then P_COUNT × v14 (the selected track), then G_COUNT × v14 (globals) |
@@ -991,6 +991,35 @@ sounds: an editor before reads it as it was. The device's SEQ › SONG puts the 
 SOUND), only as it was loaded (an edited one refused); op 9 puts any preset or user preset the track may play. A CLEAR
 takes the entry's sound with it, a COPY+ copies it. The editor marks an entry with a sound as the device does, its
 tile's top right corner cut.
+
+## Arrangement (85; Vibe 1.1)
+
+`INFO 5A 01 caps` bit 0. The arrangement is the HOME page's third view on the device (DESIGN.md "The arrangement"): blocks
+`{track, bar, length, pattern}` of a timeline of its own, nothing of the clips (the lists, entries, chains and sounds are
+not read or written by it). A block is a pattern of the pool played from its bar for `length` bars (it loops through them);
+a track follows it from its first block, PLAY from the top, until a clip is launched on that track (`out`), BACK puts it
+right. Each op acts through the same functions as the device's control and says nothing on the device but the page
+redrawn.
+
+| Cmd | Args (7-bit bytes) | Reply |
+|---|---|---|
+| 85 ARR | none (the arrangement); 1 PUT, track 0..5, bar_hi, bar_lo (bar 0..254), pattern 0..63, len_hi, len_lo (1..255 bars): as OCT+ puts a block there: one that starts on that bar is replaced, the one it starts inside is cut where this begins, this one ends where the next begins (or at bar 255); 2 DELETE, track, bar_hi, bar_lo: the block holding that bar; 3 CLEAR: all of them, and the tracks a clip took out follow it again; 4 BACK: those tracks follow it again, ARR on; 5 MODE, 0 CLIPS / 1 ARR: which one the tracks follow | op, rc (PUT: 0 done, 1 full (128 blocks), 2 not a place, 3 a pattern with no steps; DELETE: 1 no block there), ARR (0 / 1), the tracks a clip took out (a bit each, 6 bits), the block count (lo, hi: 7 bits each), then each block in 4 bytes of 7 bits, 25 bits low first: track 3, pattern 6, bar 8, length − 1 8 |
+
+6 MOVE, track, bar_hi, bar_lo, new_hi, new_lo (the block holding that bar to start at the new bar, a bar 0..254; rc 1 no block
+there, 2 blocked: another block of the track in the way, or past the last bar: it never goes over one, as KNOB 3 on the
+device). The reply ends with the playhead: playing (0 / 1), then the 1/16 steps since PLAY, two 7-bit bytes (16 a bar; the
+editor draws a line there, asked four times a second while it plays). Firmware before reads those 3 bytes as absent.
+
+Wrong arguments (a track past 5, a bar past 254, a length 0 or past 255, a pattern past 63, a size or op that is none) get no
+reply. The blocks are sorted by track, then bar, and never overlap on a track. The arrangement is the project's: a change is a
+change to save (the autosave, the unsaved mark), kept with SAVE and back with LOAD, in the project's flash object after its
+SKF4 record (524 bytes at most: `ARR1`, the count, the blocks, a hash; a project without blocks is the SKF4 alone; firmware
+before reads the SKF4 and leaves the rest).
+
+**In a backup** (65..67): a project slot's object (ids 2..5) and the music's (id 0) are the SKF4 record then that tail when
+there are blocks (2560 + 12 + 4 × blocks bytes, at most 2560 + 524, inside the 3840 an object may have). A PUT of one with a
+tail that is not whole and valid (the hash, the order, the tracks, bars and patterns) keeps the record alone; ids 2..5 keep the
+tail in flash, id 0 takes it as the music's arrangement (none: cleared).
 
 ## THEME CUSTOM (39; Skiff #27)
 

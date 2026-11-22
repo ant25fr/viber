@@ -1446,6 +1446,18 @@ static void shift_map(smap_t *m)
         m[6 + i] = ALL[i < 3u && sel ? 6u + i : i];
     if (sel)                                         /* ((2.0) there SHIFT + EDIT deletes, ui_input.c sel_delete) */
         m[11] = (smap_t){"+ EDIT", "DELETE", 2};
+    if (arr_view()) {                                /* ((Vibe 1.1) HOME's arrangement: what its knobs and keys do) */
+        m[0] = (smap_t){"PRESETS", "BAR", 1};
+        m[3] = (smap_t){"KNOB 1", "PATTERN", 1};
+        m[4] = (smap_t){"KNOB 2", "LENGTH", 1};
+        m[6] = (smap_t){"OCT+", "PUT", 1};
+        m[7] = (smap_t){"OCT-", "ARR", 1};
+        m[8] = (smap_t){"+ EDIT", "DELETE", 2};
+        m[5] = (smap_t){"KNOB 3", "MOVE", 1};
+        m[9] = (smap_t){"PLAY", song.playing ? "STOP" : "START", 0};
+        m[10] = ALL[2];
+        m[11] = ALL[3];
+    }
     if (g == GR_SONG) {                              /* (the clip launcher) CLIPS: + PLAY fires the column, + EDIT empties */
         m[6] = (smap_t){"+ PLAY", "COLUMN", 2};    /* (the map's cell: no room for more than one word) */
         m[11] = (smap_t){"+ EDIT", "CLEAR", 2};
@@ -1470,7 +1482,8 @@ static void draw_shift(void)
 {
     smap_t m[12];
     char ti[20];
-    uint32_t i, sig = 0x5A1F7u + ui.page * 7919u + ui.home * 31u + song.sel * 977u + ux.gen * 13u + ui_prefs * 3u + song.playing * 104729u;
+    uint32_t i, sig = 0x5A1F7u + ui.page * 7919u + ui.home * 31u + song.sel * 977u + ux.gen * 13u + ui_prefs * 3u + song.playing * 104729u +
+               (uint32_t)arr_view() * 17u;
     if (!ui.force && sig == ui.layer_sig)
         return;
     ui.layer_sig = sig;

@@ -67,6 +67,16 @@ static void pool_empty(uint32_t id);
 static void pool_clear_unused(void);
 static void bank_poll(void);                   /* (Skiff) live switching (bank.c, launch.c) */
 static void song_poll(void);                   /* (the clip launcher) nothing comes in but a chain's next part (bank.c) */
+static void arr_poll(void);                    /* (Vibe 1.1) the arrangement: the next bar's blocks staged (bank.c) */
+static int arr_nth(uint32_t k, uint32_t n, uint32_t *start, uint32_t *len, uint32_t *pat);   /* (Vibe 1.1) the page's */
+static int arr_at(uint32_t k, uint32_t bar, uint32_t *start, uint32_t *len, uint32_t *pat);    /* .. reads (bank.c) */
+static int arr_put(uint32_t k, uint32_t start, uint32_t pat, uint32_t len);
+static int arr_del(uint32_t k, uint32_t bar);
+static int arr_move(uint32_t k, uint32_t bar, uint32_t start);
+static int arr_drives(uint32_t k);
+static uint32_t arr_pat_step(uint32_t pat, int32_t dir);
+static void arr_back(void);
+static uint32_t arr_sig(void);
 static void song_from(void);                   /* (the clip launcher) SHIFT + PLAY on CLIPS: the column fired (bank.c col_go) */
 static void song_oct(void);                    /* .. the CLIPS page's OCT+ OCT- and its dialog (bank.c) */
 static void song_back(void);
@@ -297,7 +307,10 @@ static void fmt_kn(char *b, int32_t k, int32_t n)
 
 static struct {
     uint8_t home;
-    uint8_t home_scope;          /* Skiff: HOME's panel the scope (HOME tapped on HOME) instead of the tracks (ui_home.c) */
+    uint8_t home_scope;          /* Skiff: HOME's panel the scope (HOME tapped on HOME) instead of the tracks (ui_home.c);
+                                  * (Vibe 1.1) 2: the arrangement (arr_view) */
+    uint8_t ar_bar, ar_pat, ar_len1, ar_win;   /* (Vibe 1.1) the arrangement view: the bar the cursor is on, the pattern
+                                  * and length (minus 1) KNOB 1 and 2 hold for OCT+, the first bar shown (ui_home.c) */
     uint8_t take_t;              /* Skiff: the TAKE box's frames left (ui_take.c; a message ends it) */
     uint8_t undo_w;              /* Skiff: the undo window's frames left (ui.c undo_step; a message ends it) */
     uint8_t page;                /* index into PAGES */
@@ -579,6 +592,11 @@ static uint32_t graph_y(void) { return large_kind() == LK_TALL ? LG_Y_GRAPH : Y_
 #define FOOT_LINE 16u
 static uint32_t foot_less(void) { return FOOT_LINE; }
 static uint32_t graph_h(void) { return large_kind() == LK_TALL ? LG_H_GRAPH + foot_less() : PANEL_H; }
+/* (Vibe 1.1) HOME's third panel, the arrangement (HOME tapped again after the scope): not under MENU > LARGE's tall cards,
+ * which have no room for it */
+#define ARR_BARS 255u                    /* (bank.c) the bars an arrangement has; ARR_VIS of them show */
+#define ARR_VIS 24u
+static int arr_view(void) { return ui.home && ui.home_scope == 2u && large_kind() != LK_TALL; }
 static int32_t graph_pad(void) { return large_kind() == LK_TALL ? (int32_t)foot_less() / 2 : (int32_t)(PANEL_H - H_GRAPH) / 2; }
 static uint32_t foot_y(void) { return Y_FOOT + foot_less(); }
 static uint32_t foot_h(void) { return H_FOOT - foot_less(); }

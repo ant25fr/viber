@@ -670,6 +670,14 @@ static void draw_foot(void)
         return;
     ui.foot_sig = sig;
     cv_begin(240, foot_h(), T_BG);
+    if (arr_view() && !ui_hints_off) {                 /* ((Vibe 1.1) HOME's arrangement: what its keys do) */
+        khint_t kh[2] = {{KC_OCTUP, "PUT"}, {KC_OCTDN, "ARR"}};
+        int32_t w = kh_w(KC_OCTUP, "PUT") + 8 + kh_w(KC_OCTDN, "ARR");
+        cv_key_row(8, 8 + w, ly - KC_TY, kh, 2, 3u, T_BG);
+        cv_free_text(8 + w + 8, ly, &AF_S, "SHIFT+EDIT: DEL", T_MID, T_BG, 232 - (8 + w + 8));
+        cv_blit(0, foot_y());
+        return;
+    }
     if (ui.ml.on && !act_cols()) {                    /* ((1.3) MIDI LEARN: what is picked and its CC, OCT+ DONE at the
                                                        * right, for the whole line (midi_learn.c ml_line) */
         char ln[24];
@@ -822,6 +830,26 @@ static void draw_columns(void)
     (void)motion_mask(song.sel, card_mot_mask);       /* (PLAY OFF: no scan) */
     if (fr.on) {
         fr_columns();
+        return;
+    }
+    if (arr_view()) {                                  /* ((Vibe 1.1) HOME's arrangement: PATTERN LENGTH (the knobs), BAR (PRESETS'),
+                                                        * and whether the selected track follows it (OCT-: back to it) */
+        uint32_t len = (uint32_t)ui.ar_len1 + 1u;
+        pat_num(val, ui.ar_pat);
+        draw_column(0, "PATTERN", val, "", pool_used(ui.ar_pat) ? VR_LIVE : VR_DIM,
+                    (int32_t)((ui.ar_pat + 1u) * 1000u / NPAT), ICON_AUTO);
+        fmt_int(val, (int32_t)len);
+        draw_column(1, "LENGTH", val, "BAR", VR_LIVE, (int32_t)(len * 1000u / 64u > 1000u ? 1000u : len * 1000u / 64u),
+                    ICON_LENGTH);
+        {   /* KNOB 3 moves the block under the cursor: its first bar */
+            uint32_t bs, bl, bp, on = arr_at(song.sel, ui.ar_bar, &bs, &bl, &bp);
+            if (on)
+                fmt_int(val, (int32_t)bs + 1);
+            else
+                str_cpy(val, "--", sizeof val);
+            draw_column(2, "MOVE", val, "", on ? VR_LIVE : VR_DIM, on ? (int32_t)(bs * 1000u / (ARR_BARS - 1u)) : -1, ICON_AUTO);
+        }
+        draw_column(3, "PLAYS", arr_drives(song.sel % NTRK) ? "ARR" : "CLIPS", "", VR_MID, -1, ICON_AUTO);
         return;
     }
     if (ui.home) {

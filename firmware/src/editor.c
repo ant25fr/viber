@@ -427,7 +427,7 @@ static int ed_args_ok(uint32_t cmd, const uint8_t *a, uint32_t n)
         return n == 3u;
     case ED_TRANSPORT: case ED_PROJ_NAME:
         return ed_project_args_ok(cmd, a, n);
-    case ED_POOL: case ED_LIST: case ED_PERFORM: case ED_LIST2:
+    case ED_POOL: case ED_LIST: case ED_PERFORM: case ED_LIST2: case ED_ARR:
         return ed_song_args_ok(cmd, a, n);
     case ED_KIT_GET:                                   /* (Skiff W3) a lane; a lane and its 15 values, each in range */
         return n == 1u && a[0] < 8u;
@@ -608,6 +608,7 @@ static void ed_handle(const uint8_t *f, uint32_t n)   /* f: the bytes between F0
                                                          * bit 2 the SMK-37's records (its copy: felucca_cast_smk.wasm;
                                                          * not bit 0, so an editor before 2.7 offers it no Screen tab) */
 #endif
+            0x5A, 1, 1,                                 /* (Vibe 1.1) the arrangement, cmd 85 (editor_song.c); last */
         };
         ed_str("FELUCCA " FELUCCA_VERSION, 24);
         ed_b(NENGINES);

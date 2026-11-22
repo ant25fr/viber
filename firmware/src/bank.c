@@ -965,6 +965,18 @@ static void esnd_go(uint32_t k, uint32_t e)
 /* track k on its entry e now (stopped): what the track had kept, then the entry's pattern ((#28) a REST: no steps, no
  * automation, on no pattern, its LEN DIV as they were: a song's rest, stage_entry), ((2.0, #30) its sound first). 0, 1
  * an empty entry, 2 without its automation, 4 PATTERNS FULL (nowhere to keep what the track had) */
+/* (Vibe 1.1) pattern id (PAT_NONE: a rest) on track k at once, what it had kept first by the caller (trk_keep) */
+static int pat_put(uint32_t k, uint32_t id)
+{
+    if (id != PAT_NONE)
+        return pat_load(&trk[k], id);
+    track_defaults_steps(&trk[k]);                 /* (its automation too, motion_lost with it: motion_clear) */
+    trk[k].p[P_SGATE] = TP[P_SGATE].def;           /* ((2.0.2) notes put here start at 1 STEP, whatever pattern's 50 %
+                                                    * GATE the track had; its LEN DIV stay: a rest's length) */
+    trk_pid[k] = 0;
+    bk.gen++;
+    return 0;
+}
 static int ent_go(uint32_t k, uint32_t e)
 {
     uint32_t id = ent_pat(k, e);
@@ -975,14 +987,225 @@ static int ent_go(uint32_t k, uint32_t e)
         return 4;
     lists.cur[k] = (uint8_t)(e % NENT);
     esnd_go(k, e);
-    if (id != PAT_NONE)
-        return pat_load(&trk[k], id);
-    track_defaults_steps(&trk[k]);                 /* (its automation too, motion_lost with it: motion_clear) */
-    trk[k].p[P_SGATE] = TP[P_SGATE].def;           /* ((2.0.2) notes put here start at 1 STEP, whatever pattern's 50 %
-                                                    * GATE the track had; its LEN DIV stay: a rest's length) */
-    trk_pid[k] = 0;
-    bk.gen++;
+    return pat_put(k, id);
+}
+/* ---- (Vibe 1.1) the arrangement: blocks of a pattern on a track's bars, a timeline of its own. Nothing of the clip
+ * launcher is read or written (no entry, list, chain or sound); a track follows it from its first block, PLAY from
+ * the top, a bar ahead (arr_poll: LAUNCH_BAR, as a launch), until a clip is launched on it (arr_off: back to the
+ * arrangement clears it). A bar is 16 of the launch points' 1/16 steps. Sorted by track, then start; a track's blocks
+ * never overlap: a block put there replaces one that starts on its bar, cuts the one it starts inside, and ends where
+ * the next begins. */
+#define ARR_MAX 128u
+typedef struct { uint8_t trk, start, len, pat; } arr_blk_t;   /* len 1..: the block is bars start .. start + len - 1 */
+static arr_blk_t arr[ARR_MAX] __attribute__((section(".pool")));
+static uint8_t arr_n;
+static uint8_t arr_on = 1;                         /* ARR (1) or CLIPS (0): which one the tracks follow */
+static uint8_t arr_off;                            /* a bit a track: a clip was launched on it since (it leaves the arrangement) */
+static uint8_t arr_has;                            /* a bit a track: it has a block (only those follow it) */
+static uint8_t arr_tgt_bar[NTRK];                  /* the bar (low byte) arr_poll last decided for a track (0 none yet) */
+static uint32_t arr_gen;                           /* changed with the blocks (the page redraws) */
+static uint32_t arr_end(const arr_blk_t *b) { return (uint32_t)b->start + b->len; }
+static void arr_recalc(void)
+{
+    uint32_t i;
+    arr_has = 0;
+    for (i = 0; i < arr_n; i++)
+        arr_has = (uint8_t)(arr_has | 1u << (arr[i].trk % NTRK));
+    arr_gen++;
+}
+static int arr_drives(uint32_t k) { return arr_on && ((arr_has >> k) & 1u) && !((arr_off >> k) & 1u); }
+/* the block of track k holding bar, its index; -1 none */
+static int arr_find(uint32_t k, uint32_t bar)
+{
+    uint32_t i;
+    for (i = 0; i < arr_n; i++)
+        if (arr[i].trk == k && arr[i].start <= bar && bar < arr_end(&arr[i]))
+            return (int)i;
+    return -1;
+}
+static void arr_remove(uint32_t i)
+{
+    for (; i + 1u < arr_n; i++)                    /* (no memmove in this libc) */
+        arr[i] = arr[i + 1u];
+    arr_n--;
+}
+/* pattern pat on track k from bar start for len bars. 0 put, 1 ARRANGEMENT FULL, 2 not a place (track, bar, pattern) */
+static int arr_put(uint32_t k, uint32_t start, uint32_t pat, uint32_t len)
+{
+    uint32_t i, j, room;
+    int f;
+    if (k >= NTRK || start >= ARR_BARS || pat >= NPAT || !len)
+        return 2;
+    if (len > ARR_BARS - start)
+        len = ARR_BARS - start;
+    if ((f = arr_find(k, start)) >= 0 && arr[f].start == start)
+        arr_remove((uint32_t)f);                   /* (the one that starts there: replaced) */
+    else if (f >= 0)
+        arr[f].len = (uint8_t)(start - arr[f].start);   /* (the one it starts inside: cut where this begins) */
+    for (i = 0, j = arr_n, room = len; i < arr_n; i++) {
+        if (arr[i].trk == k && arr[i].start > start && arr[i].start - start < room)
+            room = (uint32_t)(arr[i].start - start);   /* (the next one: where this ends) */
+        if (arr[i].trk > k || (arr[i].trk == k && arr[i].start > start)) {
+            j = i;
+            break;
+        }
+    }
+    if (arr_n >= ARR_MAX)
+        return 1;
+    for (i = arr_n; i > j; i--)
+        arr[i] = arr[i - 1u];
+    arr[j] = (arr_blk_t){(uint8_t)k, (uint8_t)start, (uint8_t)room, (uint8_t)pat};
+    arr_n++;
+    arr_recalc();
     return 0;
+}
+/* the block of track k holding bar moved to start at bar start: 0 done, 1 no block there, 2 blocked (another block of the
+ * track in the way, or past the first or last bar): never over another block, as KNOB 3 on the HOME page's arrangement */
+static int arr_move(uint32_t k, uint32_t bar, uint32_t start)
+{
+    int f = arr_find(k % NTRK, bar);
+    uint32_t i, len;
+    if (f < 0)
+        return 1;
+    len = arr[f].len;
+    if (start + len > ARR_BARS)
+        return 2;
+    for (i = 0; i < arr_n; i++)
+        if ((int)i != f && arr[i].trk == arr[f].trk && start < arr_end(&arr[i]) && arr[i].start < start + len)
+            return 2;
+    arr[f].start = (uint8_t)start;
+    arr_recalc();
+    return 0;
+}
+/* the block of track k holding bar, taken out: 1 done, 0 none */
+static int arr_del(uint32_t k, uint32_t bar)
+{
+    int f = arr_find(k % NTRK, bar);
+    if (f < 0)
+        return 0;
+    arr_remove((uint32_t)f);
+    arr_recalc();
+    return 1;
+}
+static void arr_clear(void)
+{
+    arr_n = 0;
+    arr_off = 0;
+    memset(arr_tgt_bar, 0, sizeof arr_tgt_bar);
+    arr_recalc();
+}
+/* the bars the blocks reach: the last one's end */
+static uint32_t arr_bars(void)
+{
+    uint32_t i, m = 0;
+    for (i = 0; i < arr_n; i++)
+        if (arr_end(&arr[i]) > m)
+            m = arr_end(&arr[i]);
+    return m;
+}
+/* the page's reads (ui_home.c, ui_input.c: declared in ui.c): track k's n-th block, the one holding a bar (1: there is
+ * one), the pattern after / before pat that has steps (pat itself: none), back to the arrangement, a signature */
+static int arr_nth(uint32_t k, uint32_t n, uint32_t *start, uint32_t *len, uint32_t *pat)
+{
+    uint32_t i;
+    for (i = 0; i < arr_n; i++)
+        if (arr[i].trk == k && !n--) {
+            *start = arr[i].start;
+            *len = arr[i].len;
+            *pat = arr[i].pat;
+            return 1;
+        }
+    return 0;
+}
+static int arr_at(uint32_t k, uint32_t bar, uint32_t *start, uint32_t *len, uint32_t *pat)
+{
+    int f = arr_find(k % NTRK, bar);
+    if (f < 0)
+        return 0;
+    *start = arr[f].start;
+    *len = arr[f].len;
+    *pat = arr[f].pat;
+    return 1;
+}
+static uint32_t arr_pat_step(uint32_t pat, int32_t dir)
+{
+    uint32_t i, p = pat;
+    for (i = 0; i < NPAT; i++) {
+        p = dir > 0 ? (p + 1u) % NPAT : (p + NPAT - 1u) % NPAT;
+        if (pool_used(p))
+            return p;
+    }
+    return pat;
+}
+static void arr_back(void)
+{
+    arr_on = 1;
+    arr_off = 0;
+    arr_gen++;
+}
+/* what a project keeps of it: the blocks (the autosave's and the unsaved mark's signature); arr_sig: and what the page shows */
+static uint32_t arr_data_sig(void)
+{
+    uint32_t h = 2166136261u, i;
+    for (i = 0; i < arr_n; i++)
+        h = (h ^ (arr[i].trk | (uint32_t)arr[i].start << 8 | (uint32_t)arr[i].len << 16 | (uint32_t)arr[i].pat << 24)) * 16777619u;
+    return h;
+}
+static uint32_t arr_sig(void) { return arr_data_sig() + arr_gen * 2654435761u + arr_on * 31u + arr_off * 977u; }
+/* ---- kept with the project: after its SKF4 record (2560 bytes) in the same flash object, "ARR1", the block count, 3
+ * reserved bytes, the blocks (4 bytes: track, bar, length, pattern), the FNV hash of all that. None when there are no
+ * blocks (the record is the SKF4's alone, as before); firmware before reads the SKF4 and leaves the rest (proj_fmt_of
+ * takes a longer record), the editor's backups keep the SKF4 part only. 524 bytes at most of the 1280 left */
+#define ARR_TRAILER_MAX (12u + ARR_MAX * 4u)
+static uint32_t arr_pack(uint8_t *out)
+{
+    uint32_t i, h, n = arr_n;
+    if (!n)
+        return 0;
+    memcpy(out, "ARR1", 4);
+    out[4] = (uint8_t)n;
+    out[5] = out[6] = out[7] = 0;
+    for (i = 0; i < n; i++) {
+        out[8u + 4u * i] = arr[i].trk;
+        out[9u + 4u * i] = arr[i].start;
+        out[10u + 4u * i] = arr[i].len;
+        out[11u + 4u * i] = arr[i].pat;
+    }
+    h = proj_hash(out, 8u + 4u * n);
+    memcpy(out + 8u + 4u * n, &h, 4);
+    return 12u + 4u * n;
+}
+/* n bytes after a record: how many blocks the arrangement they hold has (1..ARR_MAX), 0 none (a record without, a torn or
+ * damaged one, blocks out of order or overlapping, a track or pattern or bar that is not one) */
+static uint32_t arr_check(const uint8_t *b, uint32_t n)
+{
+    uint32_t i, c, h;
+    if (n < 12u || memcmp(b, "ARR1", 4) || (c = b[4]) == 0u || c > ARR_MAX || n < 12u + 4u * c)
+        return 0;
+    h = proj_hash(b, 8u + 4u * c);
+    if (memcmp(&h, b + 8u + 4u * c, 4))
+        return 0;
+    for (i = 0; i < c; i++) {
+        const uint8_t *r = b + 8u + 4u * i;
+        if (r[0] >= NTRK || r[1] >= ARR_BARS || !r[2] || (uint32_t)r[1] + r[2] > ARR_BARS || r[3] >= NPAT ||
+            (i && (r[0] < r[-4] || (r[0] == r[-4] && (uint32_t)r[-3] + r[-2] > r[1]))))
+            return 0;
+    }
+    return c;
+}
+/* .. taken as the arrangement (cleared first: none where there is none). 1 an arrangement */
+static int arr_unpack(const uint8_t *b, uint32_t n)
+{
+    uint32_t i, c = arr_check(b, n);
+    arr_clear();
+    arr_on = 1;
+    if (!c)
+        return 0;
+    for (i = 0; i < c; i++)
+        arr[i] = (arr_blk_t){b[8u + 4u * i], b[9u + 4u * i], b[10u + 4u * i], b[11u + 4u * i]};
+    arr_n = (uint8_t)c;
+    arr_recalc();
+    return 1;
 }
 
 /* the page's mark: the entry track k is on, its pattern the track's (BK_NONE: none) */
@@ -1087,9 +1310,10 @@ static void bank_poll_trk(uint32_t k)
     }
     if (q->armed && !song.playing) {
         q->armed = 0;
-        if (!q->adv)
+        if (!q->adv && !q->arr)                    /* (Vibe 1.1: the arrangement's has no entry to go to) */
             (void)ent_go(k, q->slot);
         q->adv = 0;
+        q->arr = 0;
         return;
     }
     if (!q->done)
@@ -1121,9 +1345,9 @@ static void bank_poll_trk(uint32_t k)
             trk_name(k, id);
     }
     q->done = 0;
-    {   /* ((2.0, #44) a chain's own next from one of its parts: its passes go on (its first after its last: one more);
-         * else in a chain anew. Its first coming in: the pass it starts on, and (round from its last) the one its pass
-         * before started on: TAKE's) */
+    if (!q->arr) {   /* ((2.0, #44) a chain's own next from one of its parts: its passes go on (its first after its last:
+                      * one more); else in a chain anew. Its first coming in: the pass it starts on, and (round from its
+                      * last) the one its pass before started on: TAKE's). (Vibe 1.1) Not the arrangement's: no entry */
         uint32_t b0, b1, e = q->slot % NENT, o = lists.cur[k] % NENT, in = (uint32_t)ent_block(k, e, &b0, &b1);
         uint32_t own = in && q->adv && o >= b0 && o <= b1;
         if (!own)
@@ -1137,7 +1361,9 @@ static void bank_poll_trk(uint32_t k)
     }
     q->adv = 0;
     trk_pid[k] = (uint8_t)(q->id == PAT_NONE ? 0u : q->id + 1u);   /* ((1.2.1, #12) a rest: on no pattern) */
-    lists.cur[k] = (uint8_t)(q->slot % NENT);
+    if (!q->arr)                                   /* (Vibe 1.1: the arrangement leaves the clip the track is on) */
+        lists.cur[k] = (uint8_t)(q->slot % NENT);
+    q->arr = 0;
     if (!q->same) {                                /* ((2.0.3, #71) the same pattern: its copy and automation as they
                                                     * came in before, so an edit since is still kept when it goes out */
         trk_sig[k] = q_sig[k];
@@ -1166,15 +1392,27 @@ static uint32_t list_sig(uint32_t k)
  * empty entry (song_poll: a rest), (#28) any on a REST: silence, no automation, the track's own LEN DIV SWING GATE DIR,
  * so the rest's REPS count passes of the length the track has; on no pattern (trk_pid 0), so nothing is kept unless it
  * was recorded into */
+static int stage_pattern(uint32_t k, uint32_t e, uint32_t id, uint32_t rest, uint32_t m, uint32_t adv, uint32_t reps,
+                         uint32_t arr);
 static int stage_entry(uint32_t k, uint32_t e, uint32_t m, uint32_t adv, uint32_t reps)
+{
+    uint32_t rest = (adv == 2u || !bank_used(k, e)) && (adv || ent_rest(k, e));   /* ((2.0) adv 2: SONG ONCE's end, a
+                                                                                   * rest on e whatever it names:
+                                                                                   * song_poll) */
+    return stage_pattern(k, e, ent_pat(k, e), rest, m, adv, reps, 0);
+}
+/* (Vibe 1.1, the arrangement) stage_entry's body, by pattern: id (PAT_NONE: none), rest: silence as a REST entry; e the
+ * entry it came from (the clip launcher's: q->slot, the chain's and the sound's), arr 1: the arrangement's (no entry:
+ * q->slot BK_NONE, its sound and the list's chain bookkeeping and cursor left alone, bank_poll_trk) */
+static int stage_pattern(uint32_t k, uint32_t e, uint32_t id, uint32_t rest, uint32_t m, uint32_t adv, uint32_t reps,
+                         uint32_t arr)
 {
     track_t *t = &trk[k];
     launch_t *q = &launch_q[k];
-    uint32_t id = ent_pat(k, e), full = 0, i, same;
+    uint32_t full = 0, i, same;
     if (q->done || (!trk_pid[k] && !seq_is_empty(t) && pool_alloc() == NPAT))
         return 4;
-    if ((adv == 2u || !bank_used(k, e)) && (adv || ent_rest(k, e))) {   /* ((2.0) adv 2: SONG ONCE's end, a rest on e
-                                                                            * whatever it names: song_poll) */
+    if (rest) {
         for (i = 0; i < NSTEP; i++)
             step_clear(&q->step[i]);
         for (i = 0; i < 5u; i++)                   /* ((2.0.2) GATE the default, as ent_go's) */
@@ -1195,7 +1433,8 @@ static int stage_entry(uint32_t k, uint32_t e, uint32_t m, uint32_t adv, uint32_
             rec_motion_of(bk_rec, id);
         q_sig[k] = proj_hash(bk_rec, BK_REC);
     }
-    q->slot = (uint8_t)e;
+    q->slot = arr ? BK_NONE : (uint8_t)e;
+    q->arr = (uint8_t)arr;
     q->id = (uint8_t)id;
     q->mlost = (uint8_t)full;
     q->mode = (uint8_t)m;
@@ -1203,8 +1442,8 @@ static int stage_entry(uint32_t k, uint32_t e, uint32_t m, uint32_t adv, uint32_
     q->adv = (uint8_t)adv;
     q->reps = (uint8_t)reps;
     q->done = 0;
-    q->snd = (uint8_t)(adv != 2u && esnd_make(k, lists.snd[k][e % NENT], &esnd[k]));   /* ((2.0, #30) its sound, made
-                                                                                       * now: in at the swap) */
+    q->snd = (uint8_t)(!arr && adv != 2u && esnd_make(k, lists.snd[k][e % NENT], &esnd[k]));   /* ((2.0, #30) its
+                                                                                       * sound, made now: in at the swap) */
     q->same = (uint8_t)same;
     q_lsig[k] = list_sig(k);
     RING_PUBLISH();
@@ -1243,6 +1482,7 @@ static int bank_switch(uint32_t k, uint32_t e)
     q = &launch_q[k];
     if (!ent_on(k, e))
         return 1;
+    arr_off = (uint8_t)(arr_off | 1u << k);        /* (Vibe 1.1: a clip launched: this track leaves the arrangement) */
     if (ent_block(k, e, &b0, &b1))                 /* ((2.0, #44) a chain: from its first part) */
         e = b0;
     chain_go[k] = 0;
@@ -1270,6 +1510,8 @@ static void song_poll(void)
     int blk, wait;
     for (k = 0; k < NTRK; k++) {
         launch_t *q = &launch_q[k];
+        if (song.playing && arr_drives(k))         /* (Vibe 1.1: a track the arrangement plays: its chain waits) */
+            continue;
         if (song.playing && q->armed && q->adv && !q->done && q_lsig[k] != list_sig(k)) {
             q->armed = 0;                          /* ((2.0.3) the chain's next staged, then the list changed (COPY+ */
             RING_PUBLISH();                        /* into that entry, another pattern, a REPS, a sound): staged */
@@ -1306,7 +1548,54 @@ static void song_poll(void)
             (void)stage_entry(k, e, LAUNCH_LOOP, 1u, 1u);
     }
     sp_was = song.playing;
-}/* (2.0, #44) PLAY from stopped: a track on a chain's part past its first (NOTES' cursor went there) plays the chain
+}
+/* (Vibe 1.1) PLAY from stopped (chain_top): each track the arrangement plays on its bar 1 block's pattern, or silent
+ * where it has none (what it had kept first); its next decision at bar 2 */
+static void arr_top(void)
+{
+    uint32_t k;
+    int f;
+    for (k = 0; k < NTRK; k++) {
+        arr_tgt_bar[k] = 0;
+        if (!arr_drives(k) || trk_keep(k))
+            continue;
+        f = arr_find(k, 0);
+        if (f < 0 || pat_put(k, arr[f].pat))        /* (a pattern erased since: silence) */
+            (void)pat_put(k, PAT_NONE);
+    }
+}
+/* (Vibe 1.1) playing, each block of a track the arrangement plays staged a bar ahead as a LAUNCH_BAR launch (the swap
+ * at the bar line: stage_pattern, arr 1): the pattern of the block that starts on the next bar, or a rest where one
+ * ends with none after it. A block's own bars the pattern loops through by itself. Run each main loop (ui_input.c,
+ * after bank_poll); a track with something waiting (4: a swap's pattern not yet kept) is tried again next time */
+static void arr_poll(void)
+{
+    uint32_t k, bar, nx;
+    int f, r;
+    if (!song.playing)
+        return;
+    bar = launch_steps / 16u;
+    nx = bar + 1u;                                 /* (the bar the next swap lands on) */
+    for (k = 0; k < NTRK; k++) {
+        launch_t *q = &launch_q[k];
+        if (!arr_drives(k) || (arr_tgt_bar[k] == (uint8_t)nx && nx < 256u) || q->armed || q->done)
+            continue;
+        if ((f = arr_find(k, nx)) >= 0 && arr[f].start == nx)
+            r = stage_pattern(k, 0, arr[f].pat, 0, LAUNCH_BAR, 0, 0, 1);
+        else if (f < 0 && nx && arr_find(k, nx - 1u) >= 0)
+            r = stage_pattern(k, 0, PAT_NONE, 1, LAUNCH_BAR, 0, 0, 1);
+        else
+            r = 3;                                 /* (nothing begins or ends there) */
+        if (r == 1)                                /* (a pattern erased since: silence from there) */
+            r = stage_pattern(k, 0, PAT_NONE, 1, LAUNCH_BAR, 0, 0, 1);
+        if (r == 4)
+            continue;
+        arr_tgt_bar[k] = (uint8_t)nx;
+        if (r == 0 || r == 2)
+            q->at = nx * 16u;                      /* (the bar it was made for, if the bar line passed meanwhile) */
+    }
+}
+/* (2.0, #44) PLAY from stopped: a track on a chain's part past its first (NOTES' cursor went there) plays the chain
  * from its first, as a pattern from its start. ((#30, the unit 2026-10-24: A's sound a user sound, ARCADE then put on
  * the track for D, PLAY on A: ARCADE until the song came round) a track on an entry with a sound plays that sound from
  * the start, unless it is on it already (its knobs turned since kept) */
@@ -1314,8 +1603,9 @@ static void chain_top(void)
 {
     uint32_t k, e, b0, b1, u;
     const uint8_t *s;
+    arr_top();                                     /* (Vibe 1.1: the tracks the arrangement plays: its first bar) */
     for (k = 0; k < NTRK; k++) {
-        if ((e = trk_ent(k)) >= NENT)
+        if ((e = trk_ent(k)) >= NENT || arr_drives(k))
             continue;
         if (ent_block(k, e, &b0, &b1) && e != b0) {
             (void)ent_go(k, b0);

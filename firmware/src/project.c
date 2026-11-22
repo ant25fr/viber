@@ -1384,10 +1384,15 @@ static void project_capture(project_t *p)
 /* the music as it is now -> slot, named `name` (0: the current name; "" none); 0 saved, nonzero refused or failed.
  * The current name becomes the saved one */
 static void project_clean(void);
+static uint32_t arr_pack(uint8_t *out);           /* (Vibe 1.1) the arrangement kept after the record (bank.c) */
+static int arr_unpack(const uint8_t *b, uint32_t n);
+static void arr_clear(void);
+static uint32_t arr_data_sig(void);
 static int project_save_as(uint32_t slot, const char *name)
 {
     project_t *p = &proj_scratch;
     int kr;
+    uint32_t tl;
     if (transport_busy()) {                            /* a flash erase silences the audio and stalls the */
         ui_message("STOP TO SAVE");                     /* sequencer (storage_hw.c): only while stopped */
         return 1;
@@ -1403,10 +1408,11 @@ static int project_save_as(uint32_t slot, const char *name)
     }
     proj_wire_gen++;
     if (!proj_pack2(&proj_wire, p, PROJ_SKF)) { ui_message("SAVE FORMAT ERROR"); return 2; }
+    tl = arr_pack(proj_wire_u.raw + PROJ_SKF->size);   /* ((Vibe 1.1) the arrangement, after the record) */
 
 #if FELUCCA_FLASH
     if (flash_ok) {
-        if (st_save(OBJ_PROJECT0 + (slot & 3u), &proj_wire, PROJ_SKF->size)) {
+        if (st_save(OBJ_PROJECT0 + (slot & 3u), &proj_wire, PROJ_SKF->size + tl)) {
             ui_message("SAVE ERROR");
             return 2;
         }
@@ -1451,6 +1457,7 @@ static int project_rename(uint32_t slot, const char *name)
     project_t *p = &proj_scratch;
     const proj_fmt_t *f = proj_fmt_of(&proj_slot[slot & 3u], sizeof(project_store_t));   /* (phase 5, 6) its format
                                                                                 * kept: SKF2 .. SKF4 name their patterns */
+    uint32_t tl = 0;                                    /* ((Vibe 1.1) the bytes after the record: its arrangement) */
     if (transport_busy()) {
         ui_message("STOP TO SAVE");
         return 1;
@@ -1462,13 +1469,19 @@ static int project_rename(uint32_t slot, const char *name)
     memset(p->name, 0, sizeof p->name);
     memcpy(p->name, name, str_len(name) < PROJ_NAME_LEN ? str_len(name) : PROJ_NAME_LEN);
     proj_wire_gen++;
+#if FELUCCA_FLASH
+    if (flash_ok && f == &PROJ_SKF4) {                  /* ((Vibe 1.1) its arrangement stays: the record's tail as flash */
+        int n = st_load(OBJ_PROJECT0 + (slot & 3u), proj_wire_u.raw, sizeof proj_wire_u.raw);   /* has it, whole or not */
+        tl = n > (int)PROJ_STORE4 ? (uint32_t)n - PROJ_STORE4 : 0u;
+    }
+#endif
 #if FELUCCA_LEGACY
     if (!(f ? proj_pack2(&proj_wire, p, f) : proj_pack(&proj_wire, p))) { ui_message("SAVE FORMAT ERROR"); return 2; }
 #else
     if (!proj_pack2(&proj_wire, p, f)) { ui_message("SAVE FORMAT ERROR"); return 2; }
 #endif
 #if FELUCCA_FLASH
-    if (flash_ok && st_save(OBJ_PROJECT0 + (slot & 3u), &proj_wire, f ? f->size : sizeof proj_wire)) {
+    if (flash_ok && st_save(OBJ_PROJECT0 + (slot & 3u), &proj_wire, (f ? f->size : sizeof proj_wire) + tl)) {
         ui_message("SAVE ERROR");
         return 2;
     }
@@ -1591,6 +1604,19 @@ static int project_restore_runtime(const project_t *input)
     memset(snd_said, 0, sizeof snd_said);               /* a missing sample is said again, after LOADED */
     return 0;
 }
+/* (Vibe 1.1) slot's arrangement, from the bytes after its record in flash; none (cleared) where there are none */
+static void arr_slot_load(uint32_t slot)
+{
+#if FELUCCA_FLASH
+    if (flash_ok) {
+        int n = st_load(OBJ_PROJECT0 + (slot & 3u), proj_wire_u.raw, sizeof proj_wire_u.raw);
+        proj_wire_gen++;
+        (void)arr_unpack(proj_wire_u.raw + PROJ_STORE4, n > (int)PROJ_STORE4 ? (uint32_t)n - PROJ_STORE4 : 0u);
+        return;
+    }
+#endif
+    arr_clear();                                        /* (no flash: a RAM slot keeps no arrangement) */
+}
 static void project_load(uint32_t slot)
 {
     mom_back(0);                                  /* ((1.3) MOMENTARY: the values as they were, then the load) */
@@ -1611,6 +1637,7 @@ static void project_load(uint32_t slot)
         return;
     }
     if (!project_restore_runtime(&proj_scratch)) {
+        arr_slot_load(slot);                            /* ((Vibe 1.1) its arrangement, before the clean mark) */
         proj_cur = (uint8_t)(slot & 3u);
         project_clean();
     }
@@ -1782,6 +1809,10 @@ static uint32_t autosave_sig(void)
         h = as_mix(h, t->step, sizeof t->step);
         h = as_mix(h, fm6_patch[i], sizeof fm6_patch[i]);
     }
+    {   /* ((Vibe 1.1) the arrangement is the project's: a block put is a change to save) */
+        uint32_t ag = arr_data_sig();
+        h = as_mix(h, &ag, sizeof ag);
+    }
     h = as_mix(h, dx_kit, sizeof dx_kit);             /* (phase 7) the DRUM-X kit */
     for (i = 0; i < G_COUNT; i++)                       /* ((Skiff U3) not the unit's CLOCK MIDI IN TUNE, ui.c) */
         if (i != G_SLOT && i != G_NAME && i != G_LOAD && i != G_SAVE && !unit_g_id(i))
@@ -1907,6 +1938,7 @@ static void project_new(void)
     motion_base_valid = 0;
     motion_lost = 0;
     lists_clear();
+    arr_clear();                                       /* ((Vibe 1.1) a blank project has no arrangement) */
     scene_forget();
     for (i = 0; i < G_COUNT; i++)
         if (i != G_SLOT && i != G_LOAD && i != G_SAVE && !unit_g_id(i))
@@ -1991,7 +2023,9 @@ static void autosave_poll(void)
     if (!(ui_prefs & PREF_RESTORE_OFF)) {
         project_capture(&proj_scratch);
         proj_wire_gen++;
-        as.err = !proj_pack2(&proj_wire, &proj_scratch, PROJ_SKF) || st_save(OBJ_AUTOSAVE, &proj_wire, PROJ_SKF->size) != 0;
+        as.err = !proj_pack2(&proj_wire, &proj_scratch, PROJ_SKF) ||
+                 st_save(OBJ_AUTOSAVE, &proj_wire, PROJ_SKF->size + arr_pack(proj_wire_u.raw + PROJ_SKF->size)) != 0;   /* ((Vibe
+                                                         * 1.1) the arrangement after the record) */
         if (as.err)
             return;
         as.writes++;
@@ -2010,10 +2044,11 @@ static int autosave_boot(int allowed)
     if (flash_ok && allowed && !(ui_prefs & PREF_RESTORE_OFF)) {
         int n;
         proj_wire_gen++;
-        n = st_load(OBJ_AUTOSAVE, &proj_wire, sizeof proj_wire);
+        n = st_load(OBJ_AUTOSAVE, proj_wire_u.raw, sizeof proj_wire_u.raw);   /* ((Vibe 1.1) a longer one: its arrangement) */
         if (n > 0 && proj_import(&proj_scratch, &proj_wire, n)) {
             proj_bound(&proj_scratch);
             if (!project_restore_runtime(&proj_scratch)) {
+                (void)arr_unpack(proj_wire_u.raw + PROJ_STORE4, n > (int)PROJ_STORE4 ? (uint32_t)n - PROJ_STORE4 : 0u);
                 ui_message("RESTORED");
                 rc = 1;
             }

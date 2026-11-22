@@ -190,7 +190,10 @@ static int preferences(void)
     uint8_t a[4] = {0, 0, 0, 0};                          /* (THEME: 0, VIBER: the only one left) */
     reset();
     uint32_t n = request(ED_INFO, a, 0);
-    bad += check("INFO (2.0) the song's tag last: 58 01 01 (LIST2, NEW, COPY+, CHAIN, ONCE, EMPTY, CLEAR UNUSED)",
+    bad += check("INFO (Vibe 1.1) the arrangement's tag last: 5A 01 01 (ARR, cmd 85)",
+        host_wire[n - 4] == 0x5A && host_wire[n - 3] == 1 && host_wire[n - 2] == 1);
+    n -= 3u;                                              /* (the tags before it, as they were) */
+    bad += check("INFO (2.0) the song's tag next: 58 01 01 (LIST2, NEW, COPY+, CHAIN, ONCE, EMPTY, CLEAR UNUSED)",
         host_wire[n - 4] == 0x58 && host_wire[n - 3] == 1 && host_wire[n - 2] == ED_SONG2);
     n -= 3u;                                              /* (the tags before it, as they were) */
     bad += check("INFO (1.3) wide ids next: 49 01, P_COUNT and P_E0 in two 7-bit bytes each; the plain bytes at most 127",
@@ -1417,6 +1420,70 @@ static int song_cmds(void)
 /* (2.0, INFO 58 01 bit 0) LIST2 (82): SONG 0..2 and each REPS byte as kept (16: CHAIN); LIST's REPS 0 CHAIN (one with
  * an entry after it, else rc 1), SONG 2 ONCE, 7 NEW, 8 COPY+ (a chain: all of it); 79's reply as before (SONG on, a
  * chain's REPS 1x); POOL 2 EMPTY (in use too: it and its entries stay), 3 CLEAR UNUSED; bad requests unanswered */
+/* (Vibe 1.1, INFO 5A 01 bit 0) ARR (85): the arrangement's blocks, PUT as OCT+ puts one, DELETE, CLEAR, BACK, MODE */
+static int arr_cmds(void)
+{
+    uint8_t a[8];
+    int bad = 0, ok;
+    uint32_t n, pa, pb, w;
+    reset();
+    memset(bk_ram, 0xFF, sizeof bk_ram);
+    arr_clear();
+    arr_on = 1;
+    ed_fresh(0, 60); ok = !bank_put(0, 0, 0);
+    ed_fresh(0, 70); ok &= !bank_put(0, 1, 0);
+    pa = ent_pat(0, 0);
+    pb = ent_pat(0, 1);
+    n = request(ED_ARR, 0, 0);
+    ok &= n == 5u + 6u + 3u + 1u && host_wire[5] == 0 && !host_wire[6] && host_wire[7] == 1 && !host_wire[8] && !host_wire[9] &&
+          !host_wire[10];
+    bad += check("ARR: the query: ARR on, no track out, no block", ok);
+    a[0] = 1; a[1] = 2; a[2] = 1; a[3] = 2; a[4] = (uint8_t)pb; a[5] = 0; a[6] = 77;        /* T3, bar 130, pattern B, 77 bars */
+    ok = request(ED_ARR, a, 7) && host_wire[5] == 1 && !host_wire[6] && arr_n == 1u && host_wire[9] == 1 && !host_wire[10];
+    w = (uint32_t)host_wire[11] | (uint32_t)host_wire[12] << 7 | (uint32_t)host_wire[13] << 14 | (uint32_t)host_wire[14] << 21;
+    ok &= (w & 7u) == 2u && (w >> 3 & 63u) == pb && (w >> 9 & 255u) == 130u && (w >> 17 & 255u) == 76u;   /* (length - 1) */
+    bad += check("  PUT: the block as the page puts it, its four 7-bit bytes track, pattern, bar, length - 1", ok);
+    a[1] = 0; a[2] = 0; a[3] = 0; a[4] = (uint8_t)pa; a[5] = 0; a[6] = 4;
+    ok = request(ED_ARR, a, 7) && !host_wire[6] && arr_n == 2u;
+    a[2] = 0; a[3] = 2; a[4] = (uint8_t)pb; a[6] = 9;                 /* (bar 3, 9 bars: the first one cut) */
+    ok &= request(ED_ARR, a, 7) && !host_wire[6] && arr_n == 3u && arr[0].start == 0u && arr[0].len == 2u && arr[1].start == 2u;
+    a[4] = 63; ok &= request(ED_ARR, a, 7) && host_wire[6] == 3u && arr_n == 3u;       /* a pattern with no steps */
+    bad += check("  PUT again: cut and replaced as the page does; a pattern with no steps: rc 3", ok);
+    a[0] = 1; a[1] = 6; ok = !request(ED_ARR, a, 7);                   /* track 7 */
+    a[1] = 0; a[2] = 1; a[3] = 127; ok &= !request(ED_ARR, a, 7);      /* bar 255: past the last (254) */
+    a[2] = 0; a[3] = 0; a[5] = 0; a[6] = 0; ok &= !request(ED_ARR, a, 7);                          /* 0 bars */
+    a[5] = 2; ok &= !request(ED_ARR, a, 7);                                                        /* 256 bars */
+    a[5] = 0; a[6] = 4; a[4] = 64; ok &= !request(ED_ARR, a, 7);                                   /* pattern 65 */
+    a[4] = (uint8_t)pa; ok &= !request(ED_ARR, a, 6) && !request(ED_ARR, a, 8);
+    bad += check("  PUT: a track, bar, length, pattern or size that is none unanswered", ok);
+    a[0] = 6; a[1] = 2; a[2] = 1; a[3] = 2; a[4] = 1; a[5] = 3;        /* T3: the block at 130 to 131 */
+    ok = request(ED_ARR, a, 6) && !host_wire[6] && arr_n == 3u && arr_find(2, 131) >= 0 && arr_find(2, 130) < 0;
+    a[2] = 1; a[3] = 122; ok &= request(ED_ARR, a, 6) && host_wire[6] == 1u;            /* bar 250: no block there */
+    a[2] = 0; a[3] = 0; a[1] = 0; a[4] = 0; a[5] = 1; ok &= request(ED_ARR, a, 6) && host_wire[6] == 2u;   /* T1's first block onto its second (bar 2): blocked */
+    a[1] = 6; ok &= !request(ED_ARR, a, 6);                                               /* a bad track */
+    a[1] = 2; a[2] = 1; a[3] = 3;
+    bad += check("MOVE: the block to start at another bar; none there: rc 1", ok);
+    song.playing = 1; launch_steps = 37u * 16u + 3u;
+    ok = request(ED_ARR, 0, 0) && host_wire[host_wire_n - 4] == 1 && host_wire[host_wire_n - 3] == ((37 * 16 + 3) & 127) &&
+         host_wire[host_wire_n - 2] == ((37 * 16 + 3) >> 7);
+    song.playing = 0; launch_steps = 0;
+    bad += check("  the reply ends with the playhead: playing and the 1/16 steps since PLAY (two 7-bit bytes)", ok);
+    a[0] = 2; a[1] = 2; a[2] = 1; a[3] = 5;                            /* T3, bar 133: inside the block at 131 */
+    ok = request(ED_ARR, a, 4) && !host_wire[6] && arr_n == 2u;
+    ok &= request(ED_ARR, a, 4) && host_wire[6] == 1u && arr_n == 2u;
+    a[1] = 6; ok &= !request(ED_ARR, a, 4);
+    bad += check("DELETE: the block holding that bar, then none there (rc 1); a bad track unanswered", ok);
+    arr_off = 5u;
+    a[0] = 5; a[1] = 0;
+    ok = request(ED_ARR, a, 2) && !arr_on && host_wire[7] == 0 && host_wire[8] == 5;   /* CLIPS, two tracks out */
+    a[1] = 2; ok &= !request(ED_ARR, a, 2);
+    a[0] = 4; ok &= request(ED_ARR, a, 1) && arr_on && !arr_off && host_wire[7] == 1 && !host_wire[8];
+    bad += check("MODE and BACK: CLIPS / ARR; BACK brings every track back (none out); a bad mode unanswered", ok);
+    a[0] = 3; ok = request(ED_ARR, a, 1) && !arr_n && !host_wire[9];
+    a[0] = 9; ok &= !request(ED_ARR, a, 1);
+    bad += check("CLEAR: no block left; another op unanswered", ok);
+    return bad;
+}
 static int song2_cmds(void)
 {
     uint8_t a[4];
@@ -1661,7 +1728,7 @@ int main(void)
 {
     int bad = preferences() + motion_locks() + wide_ids() + framing() + uart_recovery() + steps() + samples() + smp_mix() + song_protocol() + malformed_saves() +
               fm6_patches() + user_preset_roundtrip() + live_sync() + usb_burst() + menu_protocol() + drum_kit_retired() +
-              light_tracks() + preset_more() + transport_names() + song_cmds() + song2_cmds() + custom_colors();
+              light_tracks() + preset_more() + transport_names() + song_cmds() + song2_cmds() + arr_cmds() + custom_colors();
     printf("%s\n", bad ? "EDITOR TEST FAILED" : "editor test passed");
     return bad != 0;
 }

@@ -25,6 +25,17 @@
  *     none, 1 to unmute, 2 to mute) */
 enum { ED_POOL = 78, ED_LIST, ED_PERFORM };
 enum { ED_LIST2 = 82 };
+/* (Vibe 1.1) the arrangement (bank.c arr_*; INFO 5A 01 caps, bit 0), ARR (85): [op ..]: 1 PUT [1, track, bar_hi, bar_lo,
+ * pattern 0..63, len_hi, len_lo] (len 1..255 bars; bar 0..254; as OCT+ on the HOME page's arrangement puts it: a block
+ * that starts there is replaced, the one it starts inside cut, its end where the next begins), 2 DELETE [2, track,
+ * bar_hi, bar_lo] (the block holding that bar), 3 CLEAR [3] (all), 4 BACK [4] (every track a clip took out follows the
+ * arrangement again, ARR on), 5 MODE [5, 0 CLIPS / 1 ARR] -> op, rc (PUT: 0 done, 1 ARRANGEMENT FULL, 2 not a place, 3 a
+ * pattern with no steps; DELETE, MOVE: 1 no block there; MOVE: 2 blocked), ARR (0 / 1), the tracks a clip took out (a bit
+ * each), the block count (lo, hi), then each block in 4 bytes of 7 bits, 25 bits low first: track 3, pattern 6, bar 8,
+ * length - 1 8; last, the playhead: playing (0 / 1) and the 1/16 steps since PLAY (lo, hi: 14 bits, 16 a bar)
+ * 6 MOVE [6, track, bar_hi, bar_lo, new_hi, new_lo]: the block holding that bar to start at the new bar, never over another
+ * block (KNOB 3 on the device) */
+enum { ED_ARR = 85 };
 #define ED_SONG2 3u                                 /* (2.0) INFO 58 01: bit 0 LIST2, LIST's ops 7 8, REPS 0, SONG 2,
                                                      * POOL's 2 3; ((#30) bit 1: LIST2's entry sounds, its op 9) */
 
@@ -32,6 +43,16 @@ static int ed_song_args_ok(uint32_t cmd, const uint8_t *a, uint32_t n)
 {
     if (!n)
         return 1;
+    if (cmd == ED_ARR) {
+        if (a[0] == 1u)
+            return n == 7u && a[1] < NTRK && ((uint32_t)a[2] << 7 | a[3]) < ARR_BARS && a[4] < NPAT &&
+                   ((uint32_t)a[5] << 7 | a[6]) >= 1u && ((uint32_t)a[5] << 7 | a[6]) <= 255u;
+        if (a[0] == 2u)
+            return n == 4u && a[1] < NTRK && ((uint32_t)a[2] << 7 | a[3]) < ARR_BARS;
+        if (a[0] == 6u)
+            return n == 6u && a[1] < NTRK && ((uint32_t)a[2] << 7 | a[3]) < ARR_BARS && ((uint32_t)a[4] << 7 | a[5]) < ARR_BARS;
+        return a[0] == 5u ? n == 2u && a[1] <= 1u : (a[0] == 3u || a[0] == 4u) && n == 1u;
+    }
     if (cmd == ED_POOL)
         return (n == 2u && a[0] >= 1u && a[0] <= 2u && a[1] < NPAT) || (n == 1u && a[0] == 3u);
     if (cmd == ED_LIST || cmd == ED_LIST2) {
@@ -54,6 +75,45 @@ static int ed_song_args_ok(uint32_t cmd, const uint8_t *a, uint32_t n)
 static int ed_song_handle(uint32_t cmd, const uint8_t *a, uint32_t n)
 {
     uint32_t rc = 0, k, e, r;
+    if (cmd == ED_ARR) {
+        if (n) {
+            uint32_t bar = (uint32_t)a[2] << 7 | a[3];
+            if (a[0] == 1u)
+                rc = pool_used(a[4]) ? (uint32_t)arr_put(a[1], bar, a[4], (uint32_t)a[5] << 7 | a[6]) : 3u;
+            else if (a[0] == 2u)
+                rc = arr_del(a[1], bar) ? 0u : 1u;
+            else if (a[0] == 6u)
+                rc = (uint32_t)arr_move(a[1], bar, (uint32_t)a[4] << 7 | a[5]);
+            else if (a[0] == 3u)
+                arr_clear();
+            else if (a[0] == 4u)
+                arr_back();
+            else {
+                arr_on = a[1];
+                arr_gen++;
+            }
+            ui.force = 1;
+        }
+        ed_b(n ? a[0] : 0u);
+        ed_b(rc);
+        ed_b(arr_on);
+        ed_b(arr_off);
+        ed_b(arr_n);
+        ed_b((uint32_t)arr_n >> 7);
+        for (k = 0; k < arr_n; k++) {
+            r = (uint32_t)arr[k].trk | (uint32_t)arr[k].pat << 3 | (uint32_t)arr[k].start << 9 |
+                ((uint32_t)arr[k].len - 1u) << 17;
+            ed_b(r);
+            ed_b(r >> 7);
+            ed_b(r >> 14);
+            ed_b(r >> 21);
+        }
+        r = launch_steps;
+        ed_b(song.playing != 0);
+        ed_b(r > 16383u ? 16383u : r);
+        ed_b((r > 16383u ? 16383u : r) >> 7);
+        return 1;
+    }
     if (cmd == ED_POOL) {
         if (n && a[0] == 3u) {                         /* ((2.0) CLEAR UNUSED) */
             if (!pool_unused()) rc = 1;

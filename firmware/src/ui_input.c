@@ -1938,6 +1938,105 @@ static void cursor_turn(int32_t s)
     cursor_set(c);
 }
 
+/* ---- (Vibe 1.1) the arrangement view (HOME's third panel, ui_home.c graph_arr): ALGORITHM the track (every page),
+ * PRESETS the bar, KNOB 1 the pattern, KNOB 2 the length, KNOB 3 moves the block; OCT+ puts that block there (the cursor on to where it ends),
+ * SHIFT + EDIT takes the block off, OCT- is back to the arrangement (a clip launched took the track out). The cursor
+ * on a block shows its pattern and length; on a block's first bar the knobs change the block as they turn */
+static void arr_scroll(void)
+{
+    uint32_t c = ui.ar_bar, w = ui.ar_win;
+    if (c < w)
+        w = c - c % 4u;
+    else if (c >= w + ARR_VIS)
+        w = (c - (ARR_VIS - 1u) + 3u) / 4u * 4u;
+    ui.ar_win = (uint8_t)w;
+}
+static void arr_sync(void)
+{
+    uint32_t s, l, p;
+    if (arr_at(song.sel, ui.ar_bar, &s, &l, &p)) {
+        ui.ar_pat = (uint8_t)p;
+        ui.ar_len1 = (uint8_t)(l - 1u);
+    }
+}
+static void arr_cursor(int32_t s)
+{
+    ui.ar_bar = (uint8_t)clamp((int32_t)ui.ar_bar + s, 0, (int32_t)ARR_BARS - 1);
+    arr_scroll();
+    arr_sync();
+    ui.force = 1;
+}
+static void arr_live(void)
+{
+    uint32_t s, l, p;
+    if (arr_at(song.sel, ui.ar_bar, &s, &l, &p) && s == ui.ar_bar && pool_used(ui.ar_pat))
+        (void)arr_put(song.sel, s, ui.ar_pat, (uint32_t)ui.ar_len1 + 1u);
+}
+static void arr_knob(uint32_t k, int32_t s)
+{
+    if (k == 0u) {
+        int32_t n = accel(EN_K1, s, (int32_t)NPAT), d = n > 0 ? 1 : -1;
+        for (; n != 0; n -= d)
+            ui.ar_pat = (uint8_t)arr_pat_step(ui.ar_pat, d);
+    } else if (k == 1u) {
+        ui.ar_len1 = (uint8_t)clamp((int32_t)ui.ar_len1 + accel(EN_K2, s, 64), 0, (int32_t)ARR_BARS - 1 - (int32_t)ui.ar_bar);
+    } else {                                           /* KNOB 3: the block under the cursor moves, a bar a detent, never */
+        uint32_t st, ln, pt;                           /* over another block (arr_move); the cursor with it */
+        int32_t n = accel(EN_K3, s, 64), d = n > 0 ? 1 : -1;
+        if (!arr_at(song.sel, ui.ar_bar, &st, &ln, &pt)) {
+            ui_message("NO BLOCK HERE");
+            return;
+        }
+        for (; n != 0; n -= d) {
+            int32_t ns = (int32_t)st + d;
+            if (ns < 0 || arr_move(song.sel, st, (uint32_t)ns)) {
+                ui_message("BLOCKED");
+                break;
+            }
+            st = (uint32_t)ns;
+            ui.ar_bar = (uint8_t)((int32_t)ui.ar_bar + d);
+        }
+        arr_scroll();
+        ui.force = 1;
+        return;
+    }
+    arr_live();
+    ui.force = 1;
+}
+static void arr_place(void)
+{
+    uint32_t len = (uint32_t)ui.ar_len1 + 1u;
+    if (!pool_used(ui.ar_pat)) {
+        ui_message("NO PATTERN");
+        return;
+    }
+    if (arr_put(song.sel, ui.ar_bar, ui.ar_pat, len) == 1) {
+        ui_way("ARRANGEMENT FULL", "SHIFT + EDIT: DELETE");
+        return;
+    }
+    ui_message("PLACED");
+    if (ui.ar_bar + len < ARR_BARS)                    /* (the next block goes on from where this one ends) */
+        ui.ar_bar = (uint8_t)(ui.ar_bar + len);
+    arr_scroll();
+    arr_sync();
+    ui.force = 1;
+}
+static void arr_delete(void)
+{
+    ui_message(arr_del(song.sel, ui.ar_bar) ? "BLOCK DELETED" : "NO BLOCK HERE");
+    ui.force = 1;
+}
+static void arr_oct(int up)
+{
+    if (up)
+        arr_place();
+    else {
+        arr_back();
+        ui_message("ARRANGEMENT");
+        ui.force = 1;
+    }
+}
+
 /* Discussions #92 / #94: the PRESETS knob by page (the menu, a dialog, NAME and the layers: ui_input before this).
  *   SEQ's NOTES and FEEL ((2.0) and the DRUM grid): the step cursor, over a long note's ties (cursor_turn; a sound load
  *     there would drop the track's motion: never); SHIFT held: the selection (sel_shift); (#31) REC on, a chord held:
@@ -1951,7 +2050,9 @@ static void presets_turn(int32_t s)
 {
     const page_t *pg = cur_page();
     uint32_t g = pg->graph;
-    if (ui.home || g == GR_BROWSE) {
+    if (arr_view()) {                                     /* ((Vibe 1.1) the arrangement: the bar) */
+        arr_cursor(s);
+    } else if (ui.home || g == GR_BROWSE) {
         preset_step(s);
     } else if (step_page(g) || g == GR_FEEL) {
         if (roll_on() && ui.entry_open) {
@@ -2198,6 +2299,7 @@ static void ui_input(void)
     clock_wait_poll();                                  /* (PLAY on an external clock that sends nothing: say so) */
     bank_poll();                                        /* (Skiff) a pattern switched in live: what went out kept */
     song_poll();                                        /* (Skiff phase 5) SONG: each track's next entry staged */
+    arr_poll();                                         /* (Vibe 1.1) the arrangement: the next bar's blocks staged */
 #if !FELUCCA_FM4 && FELUCCA_LEGACY
     for (k = 0; k < NTRK; k++)                          /* a DIGITAL sound any other way (the paths convert it */
         if (trk[k].eng_req == ENGI_DIGITAL)             /* already): FM6 (fm4_convert.c) */
@@ -2260,6 +2362,12 @@ static void ui_input(void)
     }
 #endif
     rec_own = ui.lock == LAYER_REC;                     /* (its press closes the REC layer: no arming) */
+    if (shift_held() && ((pressed >> panel.btn[B_EDIT]) & 1u) && !ui.menu && !ui.confirm && !name_on() && arr_view()) {
+        pressed &= ~(1u << panel.btn[B_EDIT]);          /* ((Vibe 1.1) the arrangement: the block under the cursor off) */
+        shift_mark();
+        home_long = 0;
+        arr_delete();
+    }
     if (shift_held() && ((pressed >> panel.btn[B_EDIT]) & 1u) && !ui.menu && !ui.confirm && !name_on() &&
         song.seq_mode && !ui.home && (step_page(cur_page()->graph) || cur_page()->graph == GR_FEEL ||
                                       cur_page()->graph == GR_SONG)) {
@@ -2342,6 +2450,13 @@ static void ui_input(void)
         }
         if ((s = panel_enc(EN_ALGO)) != 0 && (ui.ly == LAYER_PERF || ui.ly == LAYER_GLO)) {   /* (one read: #102) */
             track_select((uint32_t)clamp((int32_t)song.sel + (s > 0 ? 1 : -1), 0, NTRK - 1));
+    if (arr_view()) {                                  /* ((Vibe 1.1) the cursor's block of the track now selected) */
+        static uint8_t arr_seen = 0xFFu;
+        if (arr_seen != song.sel) {
+            arr_seen = song.sel;
+            arr_sync();
+        }
+    }
             combo = 1;                                  /* (Skiff U1) PERFORM, GLO: ALGORITHM the track (its keys,
                                                          * GLO's four LEVELs follow; their OCT-: no one track's).
                                                          * The others drop it (OCT- puts back the layer's track) */
@@ -2500,8 +2615,13 @@ static void ui_input(void)
     if (home == BT_TAP)
         layer_unlock();                                 /* ((Skiff U2) HOME tapped: a locked layer closes, as before) */
     if (home == BT_TAP && ui.home) {                    /* Skiff: HOME on HOME, the tracks <-> the scope (ui_home.c) */
-        ui.home_scope ^= 1u;
+        ui.home_scope = (uint8_t)(ui.home_scope >= (large_kind() == LK_TALL ? 1u : 2u) ? 0u : ui.home_scope + 1u);   /* ((Vibe
+                                                         * 1.1) the tracks, the scope, the arrangement) */
         ui.force = 1;
+        if (arr_view()) {
+            arr_scroll();
+            arr_sync();
+        }
     } else if (home == BT_TAP)                          /* HOME acts on release: a hold opens the menu */
         go_home();
     cursor_fix();                                       /* LEN may have changed (knob, editor, load) */
@@ -2533,6 +2653,10 @@ static void ui_input(void)
         case B_OCTDN:
         case B_OCTUP: {
             uint32_t both = (1u << panel.btn[B_OCTDN]) | (1u << panel.btn[B_OCTUP]);
+            if (arr_view() && !lay && !ui.menu && !ui.confirm && !shift_held() && !ui.undo_w && !name_on()) {
+                arr_oct(b == B_OCTUP);                  /* ((Vibe 1.1) the arrangement: OCT+ puts a block, OCT- back) */
+                break;
+            }
             if (act_cols() || layer_set_open() || ui.ml.on)   /* action pages: enter / back (below); SET layers: OCT-;
                                                          * ((1.3) MIDI LEARN: below) */
                 break;
@@ -2669,7 +2793,10 @@ static void ui_input(void)
             ui.hot_col = (uint8_t)k;
             ui.hot_t = 40;
         }
-        if (ui.home) {
+        if (arr_view()) {                               /* ((Vibe 1.1) the arrangement: PATTERN, LENGTH) */
+            if (k < 3u)
+                arr_knob(k, s);
+        } else if (ui.home) {
             int16_t *vp;
             const param_desc_t *d = home_param(k, &vp);
             *vp = (int16_t)param_turn(d, *vp, accel(EN_K1 + k, s, d->fmt == F_ENUM ? 0 : d->max - d->min));

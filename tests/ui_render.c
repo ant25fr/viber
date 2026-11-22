@@ -796,6 +796,7 @@ enum { S_HOME, S_HOME_IDLE, S_MESSAGE, S_MESSAGE_KEY, S_MESSAGE_NOFILE, S_PRESET
        S_SIX_EDIT, S_SIX_EDIT_SAID,
        S_MOD_GRID, S_VOICE2, S_VOICE2_UNI, S_ARP_ON, S_ARP2, S_EDIT_FLT, S_GLOBAL_SWING, S_VOICE_GLIDE,   /* (Skiff U5) */
        S_SHIFT_ENV, S_SHIFT_STEP, S_SHIFT_HOME, S_LFO_RUN, S_HOME_SCOPE, S_HOME_SCOPE_PLAY,   /* (.. 2.5) */
+       S_ARR, S_ARR_PLAY,                            /* (Vibe 1.1) HOME's arrangement */
        S_FM_TONE, S_FM_ENV, S_FM_KEYS, S_FM_ALGO, S_FM_PITCH, S_FM_LFO, S_FM_INIT,   /* (FM6 LAB) */
        S_DRIVE_SOFT, S_DRIVE_HARD, S_DRIVE_FOLD, S_DRIVE_CRUSH, S_DRIVE_FUZZ, S_INS_FUZZ, S_INS_CRUSH, S_INS_FLANG,
        S_MENU_MIDI, S_MENU_MIDI_SCROLL, S_LEARN, S_LEARN_CC, S_LFO2, S_ENV2, S_LANES_TUNE, S_REVERB_HALL, S_CHORUS_FB,
@@ -814,7 +815,7 @@ enum { S_HOME, S_HOME_IDLE, S_MESSAGE, S_MESSAGE_KEY, S_MESSAGE_NOFILE, S_PRESET
        S_INS_FILTER, S_INS_FILTER_HP,                                                         /* (2.5, 6B) */
        S_CHORD_STRUM, S_CHORD_STRUM_ALT,                                                      /* (2.5, 7B) */
        S_MENU_SYNC, S_MENU_SYNC_R, S_MENU_PPQN, S_MENU_SYNCINV,                               /* MENU > AUDIO > SYNC OUT */
-       S_SHIFT_SONG, S_HINT_FREE,                                                             /* (2.5) */
+       S_SHIFT_SONG, S_SHIFT_ARR, S_HINT_FREE,                                                /* (2.5; Vibe 1.1) */
        S_MOCK_HOME, S_MOCK_PRESETS, S_MOCK_SEQ, S_MOCK_DRUM, S_MOCK_MIXER, S_MOCK_DIALOG, S_MOCK_MENU, S_COUNT };
 static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "message_key", "message_nofile", "presets", "presets_nofav", "user",
     "project", "lanes", "step", "pattern", "chance", "motion", "drum",
@@ -841,6 +842,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "mes
     "six_home", "six_song", "six_perform", "six_mixer", "six_glo", "six_fx", "six_edit", "six_edit_said",
     "mod_grid", "voice_2", "voice_2_uni", "arp_on", "arp_2", "edit_flt", "global_swing", "voice_glide",
     "shift_env", "shift_step", "shift_home", "lfo_run", "home_scope", "home_scope_play",
+    "arrangement", "arrangement_play",
     "fm_op_tone", "fm_op_env", "fm_op_keys", "fm_all_algo", "fm_all_pitch", "fm_all_lfo", "fm_init",
     "drive_soft", "drive_hard", "drive_fold", "drive_crush", "drive_fuzz", "insert_fuzz", "insert_crush", "insert_flanger",
     "menu_midi", "menu_midi_scroll", "learn", "learn_cc", "lfo_2", "env_2", "lanes_tune", "reverb_hall", "chorus_feedback",
@@ -850,7 +852,7 @@ static const char *const S_NAME[S_COUNT] = {"home", "home_idle", "message", "mes
     "song_sound", "song_sounds", "song_chains", "song_chain_copy", "drum_kit_usr", "lanes_usr",
     "follow", "follow_scale", "follow_fit", "follow_off", "follow_wait", "free_take", "free_take_turned", "dly_mono", "dly_ping", "fx_delay", "fx_reverb", "fx_sends", "pattern_64", "song_strip", "project_new",
     "project_clear", "confirm_clear_song", "confirm_clear_trks", "insert_filter", "insert_filter_hp", "chord_strum",
-    "chord_strum_alt", "menu_sync", "menu_sync_r", "menu_ppqn", "menu_syncinv", "shift_song", "hint_free_take", "mock_home", "mock_presets", "mock_seq", "mock_drum", "mock_mixer", "mock_dialog", "mock_menu"};
+    "chord_strum_alt", "menu_sync", "menu_sync_r", "menu_ppqn", "menu_syncinv", "shift_song", "shift_arr", "hint_free_take", "mock_home", "mock_presets", "mock_seq", "mock_drum", "mock_mixer", "mock_dialog", "mock_menu"};
 
 /* the scenes of the UI design screens: the state the UI-redesign
  * prototype drew them from (its setup(): two pattern tracks, the drum pattern on track 4, a synthetic scope),
@@ -1001,6 +1003,7 @@ static void setup(int s)
     memset(kb_chn, 0, sizeof kb_chn);               /* no key held (roll_playing holds one) */
     fm1_in.buttons = 0;                             /* (no button held: momentary holds LFO) */
     memset(&scd, 0, sizeof scd);                    /* ((2.5) the scope's levels and notes: none, whatever came before) */
+    ui.home_scope = 0; ui.shift = 0; launch_steps = 0;   /* ((Vibe 1.1) a screen that sets them, sets them: none leaks into the next) */
     if (s >= S_MOCK_HOME) {
         mock_state(s);
         return;
@@ -1207,11 +1210,28 @@ static void setup(int s)
         ui.home_scope = 1;
         break;
     }
+    case S_ARR:                                      /* (Vibe 1.1) HOME's arrangement: blocks on four tracks, the cursor on T2's */
+    case S_ARR_PLAY:                                 /* .. and playing, the playhead in bar 6 */
+        arr_clear();
+        (void)arr_put(0, 0, 0, 4); (void)arr_put(0, 4, 1, 4); (void)arr_put(0, 10, 0, 8);
+        (void)arr_put(1, 2, 2, 6); (void)arr_put(1, 8, 3, 2); (void)arr_put(1, 12, 2, 3);
+        (void)arr_put(2, 0, 4, 12); (void)arr_put(4, 6, 5, 1); (void)arr_put(5, 4, 6, 14);
+        sel_set(1);
+        ui.ar_bar = 8; ui.ar_win = 0; ui.ar_pat = 3; ui.ar_len1 = 1;
+        if (s == S_ARR_PLAY) {
+            song.playing = 1;
+            launch_steps = 5u * 16u + 7u;
+        }
+        ui.home = 1;
+        ui.home_scope = 2;
+        break;
     case S_SHIFT_ENV:                                /* (Skiff U5, A1) HOME held: SHIFT's map of ENV, STEP, HOME */
     case S_SHIFT_STEP:
     case S_SHIFT_HOME:
     case S_SHIFT_SONG:                               /* ((2.5) SONG's: + PLAY FROM HERE, + EDIT CLEAR) */
-        if (s == S_SHIFT_ENV) go_title("ENV");
+    case S_SHIFT_ARR:                                /* ((Vibe 1.1) HOME's arrangement) */
+        if (s == S_SHIFT_ARR) { ui.home = 1; ui.home_scope = 2; }
+        else if (s == S_SHIFT_ENV) go_title("ENV");
         else if (s == S_SHIFT_STEP) go_page(GR_ROLL);
         else if (s == S_SHIFT_SONG) { song_lists(0); go_page(GR_SONG); }
         else ui.home = 1;

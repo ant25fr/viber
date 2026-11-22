@@ -628,6 +628,52 @@ int main(void)
         bad += check("(2.0) project objects of 2048 and 3840 bytes (SKF3): kept as they are, listed at 2048", ok);
     }
 #endif
+#if !FELUCCA_LEGACY
+    /* (Vibe 1.1) the arrangement in a backup: a project slot's object is its SKF4 and the arrangement after it, as flash
+     * keeps them; the runtime's (object 0) the same; restored whole, a damaged tail dropped (the record alone), a length
+     * that is no record and arrangement refused at the begin */
+    reset();
+    arr_clear();
+    trk[0].step[0] = (step_t){{60}, 1, ST_NOTE, 0, 96, 0, 0};
+    {
+        static uint8_t obj[3840], dup[3840];
+        uint32_t tl, o0;
+        int ok;
+        (void)arr_put(0, 0, 0, 4);
+        (void)arr_put(2, 6, 0, 3);
+        ok = project_save_as(1, 0) == 0;                 /* slot 2 (object id 3) */
+        tl = 12u + 4u * 2u;
+        ok &= list(3, &len, &crc) == 0 && len == PROJ_STORE4 + tl && get_all(3, obj, len) == 0 && crc == st_crc32(obj, len) &&
+              arr_check(obj + PROJ_STORE4, tl) == 2u;
+        bad += check("(Vibe 1.1) a project slot lists with its arrangement after the record, as flash keeps it", ok);
+        ok = put_all(4, obj, len, crc) == 0 && st_load(OBJ_PROJECT0 + 2u, dup, sizeof dup) == (int)len &&
+             !memcmp(obj, dup, len);
+        arr_clear();
+        project_load(2);
+        ok &= arr_n == 2u && arr_find(2, 7) >= 0 && arr_find(0, 3) >= 0;
+        bad += check("  restored into another slot whole; it loads with the project", ok);
+        memcpy(dup, obj, len);
+        dup[PROJ_STORE4 + 9] ^= 1u;                      /* a damaged byte in the tail: the record alone is kept */
+        ok = put_all(4, dup, len, st_crc32(dup, len)) == 0 && st_load(OBJ_PROJECT0 + 2u, dup, sizeof dup) == (int)PROJ_STORE4;
+        arr_clear();
+        project_load(2);
+        ok &= arr_n == 0u;
+        bad += check("  a damaged tail is dropped: the SKF4 alone, no arrangement", ok);
+        before = erases;
+        ok = put_begin(4, PROJ_STORE4 + 13u, 0) == 1u && put_begin(4, PROJ_STORE4 + 12u + 4u * 129u, 0) == 1u && erases == before;
+        bad += check("  a length that is no record and arrangement is refused at the begin", ok);
+        arr_clear();
+        (void)arr_put(1, 2, 0, 5);
+        ok = list(0, &len, &crc) == 0 && len == PROJ_SKF->size + 12u + 4u && get_all(0, obj, len) == 0 && crc == st_crc32(obj, len);
+        o0 = len;
+        arr_clear();
+        ok &= put_all(0, obj, o0, crc) == 0 && arr_n == 1u && arr_find(1, 4) >= 0;
+        bad += check("  the runtime object has it too; restored, the music has its arrangement", ok);
+        memcpy(dup, obj, PROJ_SKF->size);
+        ok = put_all(0, dup, PROJ_SKF->size, st_crc32(dup, PROJ_SKF->size)) == 0 && arr_n == 0u;
+        bad += check("  a runtime object without one clears it", ok);
+    }
+#endif
     printf("backup test %s\n", bad ? "FAILED" : "passed");
     return bad != 0;
 }

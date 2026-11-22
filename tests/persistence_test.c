@@ -403,6 +403,25 @@ static int autosave_test(void)
     ok = autosave_boot(0) == 0 && song.g[G_BPM] != 97;
     as_run(60000u);
     bad += check("autosave: after a crash / hang / failed boot: not restored, nothing written", ok && as_erases == b0);
+    {   /* (Vibe 1.1) the arrangement is the project's: a block put is a change to save, and the restore brings it back */
+        uint32_t s0, l0, p0;
+        as_power_on();
+        (void)autosave_boot(1);
+        arr_clear();
+        w = as.writes;
+        (void)arr_put(2, 4, 0, 3);
+        (void)arr_put(0, 0, 1, 2);
+        as_run(70000u);
+        ok = as.writes > w;
+        as_power_on();
+        arr_clear();
+        ok &= autosave_boot(1) == 1 && arr_n == 2u && arr_at(2, 5, &s0, &l0, &p0) && s0 == 4u && l0 == 3u && p0 == 0u &&
+              arr_at(0, 1, &s0, &l0, &p0) && s0 == 0u && l0 == 2u && p0 == 1u;
+        bad += check("(Vibe 1.1) autosave: the arrangement is a change to save, and power-on restores it", ok);
+        arr_clear();
+        as_power_on();
+        b0 = as_erases;                              /* (the erases above are this block's: the checks below count from here) */
+    }
     as_power_on();
     ui_prefs |= PREF_RESTORE_OFF;
     ok = autosave_boot(1) == 0 && song.g[G_BPM] != 97;

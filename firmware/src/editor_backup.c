@@ -21,6 +21,11 @@ static const uint8_t ED_BK_IDS[29] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 17, 18, 
 #define ED_BK_MAX ((uint32_t)sizeof proj_wire_u.raw)
 #define ED_BK_RAW (proj_wire_u.raw)  /* reuse the existing serialized main-loop scratch */
 _Static_assert(sizeof proj_wire_u.raw >= sizeof(upf_t) && sizeof proj_wire_u.raw >= sizeof(fm6_bank_t), "backup staging");
+static uint32_t arr_pack(uint8_t *out);               /* (Vibe 1.1) the arrangement after a project record (bank.c) */
+static uint32_t arr_check(const uint8_t *b, uint32_t n);
+static int arr_unpack(const uint8_t *b, uint32_t n);
+static uint32_t ed_bk_tail0, ed_bk_ptail;             /* (Vibe 1.1) the arrangement after object 0's record (capture); after the
+                                                       * record being restored (commit) */
 static sks_t ed_bk_settings;
 static uint8_t ed_bk_valid, ed_bk_put, ed_bk_id, ed_bk_gen;
 static uint32_t ed_bk_len, ed_bk_crc, ed_bk_pos, ed_bk_ms, ed_bk_usb;
@@ -42,7 +47,7 @@ static void ed_bk_pack(const uint8_t *p, uint32_t n)
 static const uint8_t *ed_bk_object(uint32_t id, uint32_t *len)
 {
     *len = 0;
-    if (id == 0u) { *len = PROJ_SKF->size; return ED_BK_RAW; }    /* (Skiff phase 5: SKF2; phase 6: SKF3; 2.0: SKF4) */
+    if (id == 0u) { *len = PROJ_SKF->size + ed_bk_tail0; return ED_BK_RAW; }    /* (Skiff phase 5: SKF2; phase 6: SKF3; 2.0: SKF4) */
     if (id == 1u) { *len = sizeof ed_bk_settings; return (const uint8_t *)&ed_bk_settings; }
     if (id >= 2u && id <= 5u) {                     /* ((2.0) the record's own size; one of a format of before as flash
                                                      * keeps it, for the editor's Restore to convert: proj_old) */
@@ -53,6 +58,13 @@ static const uint8_t *ed_bk_object(uint32_t id, uint32_t *len)
 #endif
         if (project_used(id - 2u) && !proj_old(id - 2u)) *len = f ? f->size : sizeof proj_slot[0];   /* (the converter's
                                                                                                 * SKF1: the slot) */
+#if FELUCCA_FLASH && !FELUCCA_LEGACY
+        if (flash_ok && f == &PROJ_SKF4 && *len == f->size && st_current(OBJ_PROJECT0 + id - 2u, &h) >= 0 &&   /* ((Vibe */
+            h.len > f->size && h.len == f->size + 12u + 4u * arr_check(st_buf + f->size, h.len - f->size)) {   /* 1.1) its */
+            *len = h.len;                                                                                       /* arrangement */
+            return st_buf;                                                                                      /* too */
+        }
+#endif
         return (const uint8_t *)&proj_slot[id - 2u];
     }
     if (id == 6u || id == 7u) {
@@ -82,6 +94,11 @@ static uint32_t ed_bk_capture(void)
     (void)keep_all();                               /* (phase 5) the tracks' patterns written: the chunks hold them */
     project_capture(&proj_scratch);
     if (!proj_pack2((project_store_t *)ED_BK_RAW, &proj_scratch, PROJ_SKF)) return 2;
+#if !FELUCCA_LEGACY
+    ed_bk_tail0 = arr_pack(ED_BK_RAW + PROJ_SKF->size);   /* ((Vibe 1.1) the music's arrangement after its record) */
+#else
+    ed_bk_tail0 = 0;
+#endif
     ed_bk_gen = ++proj_wire_gen;
 #if FELUCCA_FLASH
     ed_bk_settings = persist_saved;                 /* fields absent from this build survive */
@@ -123,8 +140,16 @@ static uint32_t ed_bk_commit(void)
                 return 2;                           /* whole, kept as it is: OLD FORMAT, converted another time) */
             ed_bk_len = old;
         }
+        ed_bk_ptail = 0;
         if (ed_bk_len && !old) {                    /* SKF2 .. SKF4 as they are; an older format becomes SKF1 inside its */
             const proj_fmt_t *f = proj_fmt_of(raw, (int)ed_bk_len);   /* ranges */
+            uint32_t tail = 0;                      /* ((Vibe 1.1) the bytes after an SKF4: its arrangement, whole and as */
+#if !FELUCCA_LEGACY                                 /* arr_pack writes it, or none) */
+            if (f == &PROJ_SKF4 && ed_bk_len > f->size) {
+                tail = ed_bk_len - f->size;
+                if (tail != 12u + 4u * arr_check(raw + f->size, tail)) tail = 0;
+            }
+#endif
             proj_bound(&proj_scratch);
 #if FELUCCA_LEGACY
             if (!(f ? proj_pack2((project_store_t *)raw, &proj_scratch, f)
@@ -134,11 +159,13 @@ static uint32_t ed_bk_commit(void)
 #else
             if (!proj_pack2((project_store_t *)raw, &proj_scratch, f))
                 return 2;
-            ed_bk_len = f->size;
+            ed_bk_len = f->size + tail;
+            ed_bk_ptail = tail;                     /* (object 0's: below) */
 #endif
         }
         if (ed_bk_id == 0u) {                       /* (the last object of a restore: fm1backup.js) */
             if (!ed_bk_len || project_restore_runtime(&proj_scratch)) return 2;
+            (void)arr_unpack(raw + PROJ_SKF->size, ed_bk_ptail);   /* ((Vibe 1.1) the music's arrangement; none: cleared) */
 #if FELUCCA_LEGACY
             (void)proj_migrate(1);                  /* (phase 5) an older archive's projects (ids 2..5): SKF2 (SKF3) */
 #endif
@@ -200,7 +227,8 @@ static uint32_t ed_bk_commit(void)
         if (old)
             proj_slot[ed_bk_id - 2u].align = *(const uint32_t *)raw;   /* ((2.0, D3) its magic: OLD FORMAT, as proj_fetch) */
         else if (ed_bk_len)
-            memcpy(&proj_slot[ed_bk_id - 2u], raw, ed_bk_len);
+            memcpy(&proj_slot[ed_bk_id - 2u], raw, ed_bk_len < sizeof proj_slot[0] ? ed_bk_len : sizeof proj_slot[0]);   /* ((Vibe
+                                                     * 1.1) the record; its arrangement is flash's alone) */
     } else if (ed_bk_id == 1u) {
         memcpy(&ed_bk_settings, raw, sizeof ed_bk_settings);
         settings_import(&ed_bk_settings, sizeof ed_bk_settings);
@@ -221,6 +249,8 @@ static uint32_t ed_bk_commit(void)
  * FUN9, FUN8 (before the DRUM lane levels, 1.0.x), FUN7. ((2.0) the old ones are taken, then refused at the commit) */
 static int proj_store_len(uint32_t len)
 {
+    if (!FELUCCA_LEGACY && len > PROJ_STORE4 && len <= PROJ_STORE4 + ARR_TRAILER_MAX && (len - PROJ_STORE4 - 12u) % 4u == 0u)
+        return 1;                                   /* ((Vibe 1.1) an SKF4 and its arrangement: checked at the commit) */
     return len == PROJ_STORE_SIZE || len == PROJ_STORE4 || len == PROJ_STORE3 || len == PROJ_STORE2 ||
            len == PROJ_STORE_V9 || len == PROJ_STORE_V8 || len == PROJ_STORE_V7;
 }

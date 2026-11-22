@@ -1070,6 +1070,91 @@ static int test_home_footer(void)
     return check("#3 HOME after SEQ's first page (NOTES, a drum grid): the footer as after any other page", ok);
 }
 
+/* (Vibe 1.1) HOME's third panel, the arrangement: HOME tapped on HOME goes tracks, scope, arrangement, tracks; ALGORITHM
+ * the track, PRESETS the bar, KNOB 1 the pattern (used ones), KNOB 2 the length, OCT+ puts the block there and the cursor
+ * on to its end, SHIFT + EDIT takes the block under it off, OCT- is back to the arrangement; on a block's first bar the
+ * knobs change that block; the sound (PRESETS on HOME) is not touched */
+static void fresh_pattern(uint32_t k, uint8_t note);
+static int test_arrangement(void)
+{
+    int bad = 0, ok;
+    uint32_t a, b, s, l, p, pre;
+    ui_power_on();
+    arr_clear();
+    fresh_pattern(song.sel, 50);                     /* 01 */
+    bank_put(song.sel, 0, 0);
+    fresh_pattern(song.sel, 60);                     /* 02 */
+    bank_put(song.sel, 1, 0);
+    a = ent_pat(song.sel, 0);
+    b = ent_pat(song.sel, 1);
+    go_home();
+    ok = ui.home && ui.home_scope == 0u && !arr_view();
+    press(B_HOME);
+    ok &= ui.home_scope == 1u && !arr_view();
+    press(B_HOME);
+    ok &= ui.home_scope == 2u && arr_view();
+    press(B_HOME);
+    ok &= ui.home_scope == 0u;
+    press(B_HOME); press(B_HOME);
+    ok &= arr_view();
+    bad += check("arrangement: HOME on HOME goes tracks, scope, arrangement, tracks", ok);
+    pre = TSEL->preset;
+    turn(EN_PRESET, 3);
+    ok = ui.ar_bar == 3u && TSEL->preset == pre;      /* (the bar, not the sound) */
+    turn(EN_PRESET, -9);
+    ok &= ui.ar_bar == 0u;                           /* (not before the first bar) */
+    turn(EN_PRESET, 30);
+    ok &= ui.ar_bar == 30u && ui.ar_win > 0u && ui.ar_bar < ui.ar_win + ARR_VIS;   /* (the window follows) */
+    bad += check("  PRESETS the bar, clamped, the window follows; the sound stays", ok);
+    turn(EN_PRESET, -30);
+    ui.ar_pat = (uint8_t)a;
+    turn(EN_K1, 1);
+    ok = ui.ar_pat == b;                             /* (the next pattern that has steps) */
+    turn(EN_K1, 1);
+    ok &= ui.ar_pat == a;                            /* (round again, the unused ones passed) */
+    turn(EN_K1, 1);
+    turn(EN_K2, 2);
+    ok &= ui.ar_len1 == 2u;
+    bad += check("  KNOB 1 the pattern (used ones), KNOB 2 the length", ok);
+    press(B_OCTUP);                                  /* b, 3 bars, at bar 1 */
+    ok = arr_at(0, 0, &s, &l, &p) && s == 0u && l == 3u && p == b && ui.ar_bar == 3u;
+    turn(EN_K1, 1);                                  /* a */
+    turn(EN_K2, -1);                                 /* 2 bars */
+    press(B_OCTUP);                                  /* at bar 4 */
+    ok &= arr_at(0, 3, &s, &l, &p) && s == 3u && l == 2u && p == a && ui.ar_bar == 5u && arr_n == 2u;
+    bad += check("  OCT+ puts the block at the cursor, the cursor on to where it ends", ok);
+    turn(EN_PRESET, -2);                             /* the first bar of the second block: its pattern and length */
+    ok = ui.ar_bar == 3u && ui.ar_pat == a && ui.ar_len1 == 1u;
+    turn(EN_K1, 1);                                  /* the block itself changes: b */
+    turn(EN_K2, 1);
+    ok &= arr_at(0, 3, &s, &l, &p) && p == b && l == 3u && arr_n == 2u;
+    turn(EN_PRESET, 1);                              /* inside it: the pending values only (OCT+ would cut it) */
+    turn(EN_K1, 1);
+    ok &= arr_at(0, 3, &s, &l, &p) && p == b && ui.ar_pat == a;
+    bad += check("  the cursor on a block shows it; on its first bar the knobs change it, inside them only the pending", ok);
+    turn(EN_PRESET, -1);
+    turn(EN_K3, 1);                                  /* KNOB 3: the block moves a bar right, the cursor with it */
+    ok = arr_at(0, 4, &s, &l, &p) && s == 4u && l == 3u && ui.ar_bar == 4u && !arr_at(0, 3, &s, &l, &p);
+    turn(EN_K3, -1);
+    ok &= arr_at(0, 3, &s, &l, &p) && s == 3u && ui.ar_bar == 3u;
+    turn(EN_K3, -1);                                 /* .. not over the block before it */
+    ok &= arr_at(0, 3, &s, &l, &p) && s == 3u && ui.ar_bar == 3u && arr_n == 2u && arr_at(0, 0, &s, &l, &p) && s == 0u;
+    bad += check("  KNOB 3 moves the block under the cursor a bar a detent, never over another one", ok);
+    btn_down(B_HOME); frame();                       /* SHIFT + EDIT: the block off */
+    press(B_EDIT);
+    btn_up(B_HOME); frame();
+    ok = !arr_at(0, 3, &s, &l, &p) && arr_n == 1u;
+    bad += check("  SHIFT + EDIT takes the block under the cursor off", ok);
+    arr_off = 1u;
+    ok = !arr_drives(0);
+    press(B_OCTDN);
+    ok &= arr_off == 0u && arr_drives(0);
+    bad += check("  OCT-: back to the arrangement (a launched clip took the track out)", ok);
+    ui.home_scope = 0;
+    arr_clear();
+    return bad;
+}
+
 /* (#22) HOME without its lanes (MENU > LARGE's tall cards; the scope, HOME tapped on HOME): the footer names the track's
  * engine and sound, as with HINTS OFF, not HOLD [HOME] SHIFT; with the lanes the hint stays */
 static int test_home_names(void)
@@ -10161,6 +10246,7 @@ int main(void)
     bad += test_grid();
     bad += test_home_footer();
     bad += test_home_names();
+    bad += test_arrangement();
     bad += test_clock_wait();
     bad += test_grid_rows();
     bad += test_mixer_no_flash();

@@ -1409,7 +1409,7 @@ static uint32_t graph_signature(void)
     uint32_t h = 2166136261u, i;
     if (ui.home)                                     /* scope: redraw every other frame; Skiff's tracks ((2.5, 8C) and
                                                       * LARGE's names): on a change */
-        return ui.home_scope ? h ^ (ui.frame / 2u) : home_sig();
+        return arr_view() ? arr_sig_view() : ui.home_scope ? h ^ (ui.frame / 2u) : home_sig();
     h ^= (uint32_t)pg->graph * 131u + TSEL->eng_req + song.sel * 7777u + ui.page * 1291u;
     if (strip_kind() == SK_TITLE)                    /* MENU > LARGE: the page's title (its engine, its number) */
         return h ^ 0x5A17u;
@@ -2318,7 +2318,9 @@ static void draw_graph(void)
         graph_ht = 100;
     } else if (ui.home) {
         cv_oy = 0;
-        if (ui.home_scope)
+        if (arr_view())
+            graph_arr();                             /* ((Vibe 1.1) the arrangement: ui_home.c) */
+        else if (ui.home_scope)
             graph_scope(c);
         else
             graph_tracks();                          /* Skiff: the four tracks (ui_home.c) */

@@ -1149,6 +1149,50 @@ async function editorLists() {
   ok(m.size === 64 + 6 + 2 + 1 && [...m.values()].every((x) => x[1] === 0), "apc: no device: every LED dark");
 }
 
+/* (Vibe 1.1, INFO 5A 01 01) ARR (85): the arrangement's blocks, PUT cut and replaced as the page does, DELETE by bar, CLEAR,
+   BACK, MODE; the wire's 4 bytes of 7 bits a block; none of it for firmware without the tag */
+async function editorArr() {
+  const C = E.CMD, A = (...x) => E.parse[C.ARR](x[0]);
+  const { rq, done } = attachMock({});
+  ok(E.parse[C.INFO](await rq(E.req.info())).arr === 1, "arr: INFO 5A 01 01 after the song's tags");
+  let q = A(await rq(E.req.arr()));
+  ok(q.op === 0 && !q.rc && q.on && !q.out && !q.count && !q.blocks.length, "arr: the query: ARR on, no block");
+  q = A(await rq(E.req.arr(1, 2, 130, 1, 77)));
+  ok(!q.rc && q.op === 1 && q.count === 1 && JSON.stringify(q.blocks[0]) === JSON.stringify({ trk: 2, pat: 1, start: 130, len: 77 }),
+     "arr: PUT T3 bar 131: the block back as put (track, pattern, bar 130, 77 bars)");
+  await rq(E.req.arr(1, 0, 0, 0, 4));
+  q = A(await rq(E.req.arr(1, 0, 3, 1, 9)));               /* bar 4, 9 bars: cuts the first block, and is cut where none follows */
+  ok(q.blocks.filter((b) => b.trk === 0).map((b) => [b.start, b.len, b.pat].join()).join(" ") === "0,3,0 3,9,1",
+     "arr: PUT cuts the block it starts inside; sorted by track and bar");
+  q = A(await rq(E.req.arr(1, 0, 3, 0, 2)));               /* replaces the one that starts there; ends where the next begins (none) */
+  ok(q.blocks.filter((b) => b.trk === 0).map((b) => [b.start, b.len, b.pat].join()).join(" ") === "0,3,0 3,2,0",
+     "arr: PUT on a block's first bar replaces it");
+  ok(A(await rq(E.req.arr(1, 0, 3, 63, 2))).rc === 3, "arr: a pattern with no steps: rc 3");
+  const none = (r) => rq(r, { timeout: 100, retries: 0 }).then(() => false, (e) => /^timeout/.test(e.message));
+  ok((await none(E.req.arr(1, 6, 0, 0, 1))) && (await none(E.req.arr(1, 0, 255, 0, 1))) && (await none(E.req.arr(1, 0, 0, 0, 0))) &&
+     (await none(E.req.arr(1, 0, 0, 0, 300))), "arr: a track, bar or length that is none is unanswered");
+  q = A(await rq(E.req.arr(2, 2, 200)));
+  ok(!q.rc && !q.blocks.some((b) => b.trk === 2) && A(await rq(E.req.arr(2, 2, 200))).rc === 1, "arr: DELETE by bar (inside a block), then none there");
+  q = A(await rq(E.req.arr(1, 0, 0, 1, 3)));              /* T1: a block at bar 1 of 3 bars; one at bar 5 */
+  q = A(await rq(E.req.arr(1, 0, 4, 1, 2)));
+  q = A(await rq(E.req.arr(6, 0, 4, 5)));                   /* MOVE the second to bar 6 */
+  ok(!q.rc && q.blocks.some((b) => b.trk === 0 && b.start === 5 && b.len === 2), "arr: MOVE the block holding a bar to another bar");
+  ok(A(await rq(E.req.arr(6, 0, 5, 2))).rc === 2 && A(await rq(E.req.arr(6, 0, 100, 101))).rc === 1,
+     "arr: MOVE over another block refused (rc 2); no block there (rc 1)");
+  ok((await none(E.req.arr(6, 0, 0, 255))) && (await none(E.req.arr(6, 7, 0, 3))), "arr: MOVE to a bar or track that is none unanswered");
+  q = A(await rq(E.req.arr()));
+  ok(q.playing === false && q.pos === 0, "arr: the playhead (stopped)");
+  ok(!A(await rq(E.req.arr(5, 0))).on && A(await rq(E.req.arr(4))).on, "arr: MODE CLIPS, then BACK puts ARR on");
+  q = A(await rq(E.req.arr(3)));
+  ok(!q.count && q.on, "arr: CLEAR");
+  done();
+  const o = attachMock({ noArr: true });
+  const info = E.parse[C.INFO](await o.rq(E.req.info()));
+  ok(info.skiff === 127 && info.song2 === 3 && !info.arr && (await o.rq(E.req.arr(), { timeout: 100, retries: 0 }).then(() => false,
+     (e) => /^timeout/.test(e.message))), "arr: firmware before (no 5A 01): arr 0, ARR unanswered");
+  o.done();
+}
+
 /* (2.0, INFO 58 01 01) LIST2 (SONG ONCE, the chains as kept), LIST's 5 0 CHAIN, 6 2 ONCE, 7 NEW, 8 COPY+ (a chain: all
    of it), POOL's 2 EMPTY and 3 CLEAR UNUSED; LIST's own reply as before (ONCE: on, a CHAIN: 1x) */
 async function editorSong2() {
@@ -2214,6 +2258,7 @@ await editorKit();
 await editorTransportNames();
 await editorLists();
 await editorSong2();
+await editorArr();
 await editorLocks();
 await editorLight();
 await editorLive();
