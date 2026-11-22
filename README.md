@@ -1,8 +1,8 @@
 <h1 align="center">Viber</h1>
 
 <p align="center"><b>A six-track groovebox firmware for the M-VAVE FM-1 and SMK-37 Pro</b><br>
-synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, live performance, and a screen that shows what every control does<br>
-<sub>Based on Skiff and Felucca, by Anto. Version 1.1</sub></p>
+synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> and an <b>arrangement</b>, live performance, and a screen that shows what every control does<br>
+<sub>Based on Skiff and Felucca, by Anto. Version 1.2</sub></p>
 
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-GPL--3.0--only-blue.svg" alt="License: GPL-3.0-only"></a>
@@ -13,12 +13,13 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, l
 
 - **[Web installer](https://ant25fr.github.io/viber/webapp/installer/)**: installs Viber on an FM-1 from the browser (WebUSB), and brings the official firmware back.
 - **[Editor](https://ant25fr.github.io/viber/webapp/editor/)** and **[emulator](https://ant25fr.github.io/viber/try/)**: edit the unit from a computer, or try Viber in the browser.
-- The package is `viber-1.1.fwsc` (identity `FM-1_2507010000`), attached to the [releases](https://github.com/ant25fr/viber/releases).
+- The package is `viber-1.2.fwsc` (identity `FM-1_2507010000`), attached to the [releases](https://github.com/ant25fr/viber/releases).
 
 ## What Viber adds
 
 - **Wavetable engine (WAVE)**: 8 tables of 16 single-cycle frames, scanned with TABLE, with WAVE, SUB and DETUNE; the screen draws the table as a 3D stack with the current frame highlighted.
 - **Clips mode (SEQ › CLIPS)**: each track's clips drawn at double width and split over 2 pages, launched with OCT+ or a whole column at once.
+- **Arrangement (HOME, third view)**: a timeline of patterns on the bars of each track, apart from the clips; KNOB 1 the pattern, KNOB 2 its length, KNOB 3 moves it, PRESETS the bar, OCT+ puts it, SHIFT + EDIT deletes; a clip launched takes its track out until OCT- brings it back. Saved with the project, edited in the web editor's Song tab.
 - **Ableton-style knobs**: the 4 settings of every page as round knobs at the bottom of the screen.
 - **Master VU meter** in the header, left of the battery.
 
@@ -28,55 +29,20 @@ synths and drums, a <b>wavetable engine</b>, a <b>clips mode</b> on two pages, l
 <td width="33%"><img src="docs/img/viber_clips_p1.png" alt="SEQ › CLIPS"><br><sub><b>CLIPS</b>: wide clips, 2 pages</sub></td>
 <td width="33%"><img src="docs/img/viber_clips_chain.png" alt="CLIPS, chained clips"><br><sub><b>CLIPS</b>: chained clips</sub></td>
 </tr>
+<tr>
+<td width="33%"><img src="docs/img/viber_arrangement.png" alt="HOME, the arrangement"><br><sub><b>ARRANGEMENT</b>: patterns on a timeline, the playhead</sub></td>
+<td width="33%"><img src="docs/img/viber_arrangement_shift.png" alt="The arrangement's controls, with HOME held"><br><sub><b>SHIFT</b>: what each control does there</sub></td>
+<td width="33%"><img src="docs/img/editor_arrangement.png" alt="The web editor's arrangement"><br><sub><b>EDITOR</b>: the same timeline, drag and drop</sub></td>
+</tr>
 </table>
 
-<p align="center"><b>New in 2.7:</b> the Screen tab goes full screen, works the FM-1 from the page (mouse, touch or
-keyboard) and comes to the SMK-37, the editor's Sequencer as a piano roll, SYNC OUT for Pocket Operators, and fixes: the phaser's squeal, the
-filter on spread voices, TRIO's and SUB BASS's clicks, the editor's stray entries ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.7">the release notes</a><br>
-<b>New in 2.6:</b> the Skiff Editor's Screen tab: the FM-1's screen, large, on a computer or an
-Android tablet, following the unit as you play ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.6">the release notes</a><br>
-<b>New in 2.5.1:</b> FX › DRIVE's CRUSH no longer cracks on chords and loud notes, as LOFI PIANO
-did ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.5.1">the release notes</a><br>
-<b>New in 2.5:</b> 16 voices a track, a true-stereo delay and chorus, takes played while stopped
-(Skiff finds the tempo), the delay and reverb beside their sends, a song you can follow and start from any entry, a
-FILTER insert, STRUM, and fixes from your issues ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.5">the release notes</a><br>
-<b>New in 2.2:</b> USB MIDI: everything the tracks play goes out, timed with the sound (steps, the
-arp, chords, ratchets), MIDI clock and Start / Stop, a track as an external synth's, knob CCs, remote buttons, Song
-Position; newer FM-1s with another flash chip save and update ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.2">the release notes</a><br>
-<b>New in 2.1.1:</b> a drum struck again while it still rings starts without a click: tom rolls,
-ratchets and the long-decay kits ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.1.1">the release notes</a><br>
-<b>New in 2.1:</b> chord follow, a bass line or an arp that moves with another track's chords, and
-QUANTIZE SOLO, chords on the white keys and a tune on the black ones ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.1">the release notes</a><br>
-<b>New in 2.0.3:</b> KBD HOLD, whole chords into the arpeggiator on MONO sounds, sampled notes
-struck again without a click, Learn's videos re-made on 2.0, and fixes from your issues ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.0.3">the release notes</a><br>
-<b>New in 2.0.2:</b> notes up to 128 steps long, the way back to the official firmware takes V16 too,
-and fixes from your issues ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.0.2">the release notes</a><br>
-<b>New in 2.0.1:</b> fixes from your issues: FM6 sounds from DX7 banks no longer crackle, OCT+ in the
-EDIT layer turns every drum lane back on, and the editor finds the unit on a Mac too ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.0.1">the release notes</a><br>
-<b>New in 2.0:</b> NOTES and FEEL, notes that overlap with lengths of their own, chains, songs
-that play once and change sounds, drum lanes panned and your own drum kits, one mute and one MOD page, and new save
-formats with room to grow ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v2.0">the release notes</a><br>
-<b>New in 1.4:</b> Skiff on M-VAVE's <a href="SMK37.md">SMK-37 Pro</a> keyboard, REST in SONG,
-your own theme colours, each user sample's own level and sends, and an installer that carries on after a cut-off
-install ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v1.4">the release notes</a><br>
-<b>New in 1.3:</b> the FM-1's second core (BETA: 12 voices), MIDI LEARN and a channel per track,
-an INSERT effect, LFO sync, SPREAD and more from Felucca 1.6.1 ·
-<a href="https://github.com/illuminus5/skiff/releases/tag/v1.3">the release notes</a></p>
-
-<p align="center"><a href="https://youtu.be/c0HFI7AvN1M"><img src="docs/img/video_1_3.jpg" alt="Skiff 1.3 on YouTube: the FM-1's second core, 12 voices, MIDI LEARN" width="640"></a><br>
-<a href="https://youtu.be/c0HFI7AvN1M">▶ Watch the 1.3 tour on YouTube (3:38)</a></p>
+<p align="center"><b>New in 1.2:</b> an <b>arrangement</b>, a timeline of its own as in Ableton Live, kept apart from the clips:
+HOME, tapped again after the scope, shows a row a track and the bars across; put a pattern on any bars, move it with KNOB 3,
+and the tracks follow it. The Song tab of the editor draws the same timeline (drag, resize, zoom, undo, a playhead) and
+holding HOME names every control of it ·
+<a href="https://github.com/ant25fr/viber/releases">the releases</a><br>
+<sub>Viber is built on <a href="https://github.com/illuminus5/skiff">Skiff</a> 2.7 by illuminus5: its own history is in
+<a href="https://github.com/illuminus5/skiff/releases">Skiff's releases</a>.</sub></p>
 
 <p align="center"><b>New to Skiff?</b> <a href="https://illuminus5.github.io/skiff/learn/">Learn Skiff</a>: the manual in chapters, each
 with a video that shows every press on the unit. Start with <a href="https://illuminus5.github.io/skiff/learn/#first-beat">your first beat</a>.<br>
@@ -106,15 +72,15 @@ Custom firmware, at your own risk; the way back to the official firmware is belo
 connect the FM-1 by USB and follow it. The same page takes the FM-1 back to the official firmware (V15 or V16: the
 version it had before Skiff), saving a complete backup of your music first.
 
-**With Python 3:** download `skiff-2.7.fwsc` from the [latest release](https://github.com/illuminus5/skiff/releases/latest)
+**With Python 3:** download `viber-1.2.fwsc` from the [latest release](https://github.com/ant25fr/viber/releases/latest)
 and, with this repository's `tools/` folder,
 
 ```
 pip install mido python-rtmidi
-python tools/fm1_install.py skiff-2.7.fwsc
+python tools/fm1_install.py viber-1.2.fwsc
 ```
 
-It takes about two minutes and the FM-1 restarts on Skiff.
+It takes about two minutes and the FM-1 restarts on Viber.
 
 Skiff doesn't use the FM-1's Bluetooth, so there is nothing to pair; holding HOME (the official firmware's Bluetooth
 switch) opens Skiff's MENU when you let it go.
@@ -131,41 +97,13 @@ Python). Two steps come first: M-VAVE's firmware V016 on the keyboard, and a bac
 keyboard's own key calibration. [SMK37.md](SMK37.md#install) has both, the way back and what to do if it does not
 start.
 
-**Updating to 2.5:** nothing is converted.
-- Every FM-1 moves to MENU › SYSTEM › CPU 2 CORES once: up to 16 voices. One whose second core doesn't start says
-  CORE 2 FAILED and stays on 1 CORE (8 voices). The SMK-37 stays on the CPU setting it has.
-- Your songs keep a mono delay (GLO › DELAY's MODE MONO) and sound as they did; a new project starts on STEREO.
-- Undo keeps 6 levels instead of 8: the room went to the voices and to takes played while stopped.
+**Coming from Skiff or Felucca:** your projects and sounds are read as they are. The first start of an FM-1 moves it to
+MENU › SYSTEM › CPU 2 CORES (16 voices; one whose second core doesn't start says CORE 2 FAILED and stays on 1 CORE).
+Skiff's own upgrade notes, for the older versions, are in [Skiff's releases](https://github.com/illuminus5/skiff/releases).
+If an FM-1 with the UC25HQ80 flash chip loses its saves, or no updater takes it, hold OCT- and OCT+ for 5 seconds (a USB
+disk named WL82 UBOOT1.00 appears) and put the official firmware back as [below](#if-the-fm-1-does-not-start) describes.
 
-**Updating from 2.1.1 or older:**
-- On Windows the FM-1 is set up once more: 2.2 lists its USB audio before its MIDI, for macOS. Pick its recording
-  input again in your recorder or DAW; it may be named "Line (2- Felucca)". MIDI apps find "Felucca" as before.
-- NOTES OUT is ALL from 2.2: what the sequencer plays goes out over USB MIDI too. For only the keys you play, as
-  before, set MENU › MIDI › NOTES OUT KEYS ([MIDI implementation](#midi-implementation)).
-
-**Saves gone after switching off, or the installer can't update the FM-1 from Skiff:**
-- The cause: some newer FM-1s carry another flash chip, the UC25HQ80. Skiff before 2.2 didn't know it, so it kept
-  everything in RAM and refused updates ([#96](https://github.com/illuminus5/skiff/issues/96)). 2.2 knows the chip.
-- From the official firmware, the installer puts 2.2 on as usual.
-- From Skiff 2.1.1 or older on such a unit, the installer and M-VAVE's own updater are both refused by that old check.
-  Hold OCT- and OCT+ for 5 seconds: the FM-1 goes into the chip's boot mode, and a computer sees a USB disk named
-  WL82 UBOOT1.00. Put the official firmware back as [below](#if-the-fm-1-does-not-start) describes (FM-1
-  Transporter, or jl-uboot-tool), then install 2.2.
-
-**Updating to 2.0** from Skiff 1.x or Felucca: 2.0 reads what Skiff 1.0 and later saved, and keeps it in newer
-formats from then on. The installer page first takes a complete backup and saves it to your computer
-(`Skiff-backup-DATE.json`: keep it, it is the way back). After the install it converts what 2.0 can't read as it
-was (Felucca's projects and user sounds, DIGITAL sounds, the oldest formats) and writes only that back, with a list
-of what it converted and of anything with no place in 2.0.
-- `fm1_install.py` converts nothing. 2.0 shows a slot it can't read as OLD FORMAT and keeps it. In the Skiff Editor,
-  take a backup and restore it: the Restore converts it.
-- A project the converter couldn't give patterns to (the pattern pool full) also stays OLD FORMAT: free some in
-  SAVE › PATTERNS, then take a backup and restore it.
-- **The way back to 1.x:** install 1.4.x, then restore the dated backup in the Skiff Editor. 1.x doesn't read what
-  2.0 saves: such projects and user sounds look empty there (their bytes stay until saved over), and its settings
-  start at their defaults.
-
-**Edit from a computer:** the [Skiff Editor](https://illuminus5.github.io/skiff/webapp/editor/) (Chrome or
+**Edit from a computer:** the [Viber editor](https://ant25fr.github.io/viber/webapp/editor/) (Chrome or
 Edge, over USB MIDI).
 
 ## At a glance
@@ -178,6 +116,7 @@ Edge, over USB MIDI).
 | **Recording** | live with overdub, FEEL (keeps where you played), count-in and click; step recording; TAKE keeps the last loop you played, after the fact; (2.5) FREE TAKE: play with the transport stopped, and Skiff finds the tempo, the bars and the first beat |
 | **Automation** | knob moves and parameter locks (hold a step, turn a knob), 64 records, listed and edited on SEQ › AUTOMATION |
 | **Patterns and clips** | a pool of 64 patterns shared by every project; each track a grid of 16 entries (A–P), each a clip: a pattern (or a REST = silence), or chained into the next as one long pattern; the CLIPS page (was SONG) launches any clip with OCT+, a whole column at once with SHIFT + PLAY, each at the LAUNCH point — nothing auto-advances |
+| **Arrangement** | HOME's third view: patterns put on the bars of each track (up to 128 blocks over 255 bars), a timeline of its own beside the clips; KNOB 3 moves a block; saved with the project; drawn and edited, with a playhead, in the editor's Song tab |
 | **Performance** | PERFORM: launch any track's entries and stage mutes on LOOP, BAR, BEAT or NOW; 16 scenes; throws (CUTOFF, REVERB, DELAY, DIST) that glide back, or stay; one mute a track on the black keys of GLO, FX and PERFORM (a tap latches it, held it cuts); the FX layer: repeat, reverse, filter sweeps, tape stop, freeze, harmonizer, gate, dub echo, flanger, vinyl |
 | **Sound** | per track: an envelope (in milliseconds or note values) and a second one for modulation (ENV 2), an LFO (free or synced to the tempo), one MOD page for where they go (the LFO's four depths, the envelope's three, a 4-slot modulation matrix), DIST in five types (INSERT's SOFT, HARD, FOLD, CRUSH, FUZZ) with a TONE, an INSERT (drives, a bitcrusher, phaser, flanger, chorus, (2.5) a filter from low-pass to high-pass) with MIX, the SLICER (16 patterns), DUCK (sidechain), SPREAD (the voices across the stereo field); a drum kit's lanes tuned, their decay set and (2.0) panned one by one; arpeggiator (14 modes), chord keys (9 chords, 5 voicings, (2.5) strummed), 16 scales; MONO, LEGATO, UNISON, glide |
 | **Effects** | chorus (CHORUS, FLANGER or PHASER, with FEEDBACK), delay and reverb (ROOM, SPRING or a stereo HALL) as sends; (2.5) the delay MONO, STEREO or PING, each track's PAN reaching it, and with STEREO or PING the chorus's CHORUS and FLANGER in stereo |
