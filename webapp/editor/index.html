@@ -12,6 +12,7 @@
 <style>
   /* Fukiai: Hügelton Instruments' icon font (MIT, FUKIAI-LICENSE.txt). Icons are text in .ic spans;
      they stay hidden until the face has loaded (html.fk), so a missing font never shows boxes. */
+  @font-face { font-family: "Plex Screen"; src: url("fonts/IBMPlexMono-Subset.woff2") format("woff2"); font-display: block; }   /* ((Vibe 1.2) the screen's face, HD text) */
   @font-face { font-family: "Fukiai"; src: url("fukiai.ttf") format("truetype"); font-display: block; unicode-range: U+EA00-EB09; }
   /* ((Skiff 1.0) the look is the unit's BLOCKS (design/editor_looks.png A, the user's pick): the night, tiles, white
      values, Barlow Condensed (OFL, fonts/) for headings, labels and values, each track its colour, the sliders in the
@@ -3882,7 +3883,7 @@ const TEXT = {
     tabScreen: "画面", scrTitle: "本体の画面",
     scrHelp: "スタートを押すとバックアップを取ってから FM-1 を再起動し、同じ瞬間から本体の画面をここに映します。曲はそのまま残ります。「全画面」で画面いっぱいに映し、「操作」で画面のまわりに FM-1 のパネルを出して、マウス・指・キーボードで FM-1 を操作できます（FM-1 の Skiff 2.7 以降）。",
     scrStart: "スタート", scrStop: "ストップ", scrNeedDev: "先に FM-1 を接続してください。",
-    scrFx: "表示", scrFxSmooth: "なめらか", scrFxLcd: "LCD グリッド", scrFxNet: "ドット", scrFull: "全画面", scrExit: "全画面を終了", scrCtl: "操作", scrCtlNeedFw: "操作には FM-1 の Skiff 2.7 以降が必要です。",
+    scrFx: "表示", scrFxSmooth: "HD", scrFxLcd: "LCD グリッド", scrFxNet: "ドット", scrFull: "全画面", scrExit: "全画面を終了", scrCtl: "操作", scrCtlNeedFw: "操作には FM-1 の Skiff 2.7 以降が必要です。",
     scrNoPanel: "パネルの絵を読み込めませんでした。",
     scrKeys: "キーボード：Z〜' と Q〜O で鍵盤、1〜= でボタン（FX … REC）、[ ] で OCT、↑↓ で SELECT、←→ で ALGORITHM。ボタンは Shift＋クリックか右クリックで押したままになります（SHIFT は HOME を押したまま）。",
     scrNeedFw: "このファームウェアは画面を送れません。画面タブには Skiff 2.6 以降（FM-1）、Skiff 2.7 以降（SMK-37）が必要です。",
@@ -4048,7 +4049,7 @@ const TEXT = {
     tabScreen: "Screen", scrTitle: "The FM-1's screen",
     scrHelp: "Start takes a backup of your FM-1, then restarts it, so that this copy starts at the same moment and shows its screen here as it changes. Your music is kept. Full screen fills the display; Controls draws the FM-1's panel round the screen, to work the FM-1 with the mouse, a finger or the keyboard (Skiff 2.7 or later on the FM-1).",
     scrStart: "Start", scrStop: "Stop", scrNeedDev: "Connect your FM-1 first.",
-    scrFx: "Rendering", scrFxSmooth: "Smooth", scrFxLcd: "LCD grid", scrFxNet: "Sharp pixels", scrFull: "Full screen", scrExit: "Exit full screen", scrCtl: "Controls", scrCtlNeedFw: "Controls need Skiff 2.7 or later on the FM-1.",
+    scrFx: "Rendering", scrFxSmooth: "HD", scrFxLcd: "LCD grid", scrFxNet: "Sharp pixels", scrFull: "Full screen", scrExit: "Exit full screen", scrCtl: "Controls", scrCtlNeedFw: "Controls need Skiff 2.7 or later on the FM-1.",
     scrNoPanel: "The panel's drawing didn't load.",
     scrKeys: "Keyboard: Z–' and Q–O play the keys, 1–= the buttons (FX … REC), [ ] OCT, ↑ ↓ SELECT, ← → ALGORITHM. Shift-click or right-click holds a button down (SHIFT is HOME held).",
     scrNeedFw: "This firmware can't send its screen. The Screen tab needs Skiff 2.6 or later on an FM-1, 2.7 or later on an SMK-37.",
@@ -7932,6 +7933,81 @@ function scrScope(q) {
     scrCtx.fill();
   }
 }
+/* the screen's texts again, as vectors: each text the firmware drew (felucca_web.c web_txt_note) is wiped from the
+ * enlarged picture, in the colour it was drawn on, and set again in IBM Plex Mono, the face its pixels were made from
+ * (tools/build.py's preset: S 10, M 12, L 24, V 20 px), at the display's resolution */
+const SCR_PX = [10, 12, 24, 20];
+let scrFontOk = false;
+try { document.fonts.load('12px "Plex Screen"').then(() => { scrFontOk = true; scrPaint(); }, () => {}); } catch (e) { /* no font API */ }
+function scrText(q) {
+  const c = scr.copy;
+  if (!scrFontOk || !c || !c.web_text_ptr || scr.state !== "on") return;
+  const n = c.web_text_n();
+  if (!n) return;
+  const w = new Int16Array(c.memory.buffer, c.web_text_ptr(), n * 38), b = new Uint8Array(c.memory.buffer, c.web_text_ptr(), n * 76);
+  const css = (p) => `rgb(${Math.round(((p >> 11) & 31) * 255 / 31)},${Math.round(((p >> 5) & 63) * 255 / 63)},${Math.round((p & 31) * 255 / 31)})`;
+  scrCtx.textBaseline = "alphabetic";
+  for (let k = 0; k < n; k++) {
+    const o = k * 38, x0 = w[o], y0 = w[o + 1], x1 = w[o + 2], y1 = w[o + 3], x = w[o + 4], y = w[o + 5], font = w[o + 8];
+    const len = w[o + 9], ix0 = w[o + 10], asc = w[o + 11], iy0 = w[o + 12], iy1 = w[o + 13], ix1 = w[o + 14];
+    if (font === 101) {                                          /* a STYLE BLOCKS knob (ui_blocks.c knob_ring): its disc, ring and value arc */
+      const cx = x * q, cy = y * q, ratio = w[o + 10], a0 = 135 * Math.PI / 180;
+      scrCtx.save();
+      scrCtx.beginPath();
+      scrCtx.rect(x0 * q, y0 * q, (x1 - x0) * q, (y1 - y0) * q);
+      scrCtx.clip();
+      scrCtx.fillStyle = css(w[o + 7] & 0xFFFF);
+      scrCtx.beginPath(); scrCtx.arc(cx, cy, 16.7 * q, 0, 2 * Math.PI); scrCtx.fill();
+      scrCtx.fillStyle = css(w[o + 9] & 0xFFFF);
+      scrCtx.beginPath(); scrCtx.arc(cx, cy, 13.8 * q, 0, 2 * Math.PI); scrCtx.fill();
+      scrCtx.lineWidth = 2.5 * q;
+      scrCtx.lineCap = "round";
+      scrCtx.strokeStyle = css(w[o + 6] & 0xFFFF);
+      scrCtx.beginPath(); scrCtx.arc(cx, cy, 14.75 * q, a0, a0 + 1.5 * Math.PI); scrCtx.stroke();
+      if (ratio > 0) {
+        scrCtx.strokeStyle = css(w[o + 12] & 0xFFFF);
+        scrCtx.beginPath(); scrCtx.arc(cx, cy, 14.75 * q, a0, a0 + 1.5 * Math.PI * ratio / 1000); scrCtx.stroke();
+      }
+      scrCtx.restore();
+      continue;
+    }
+    if (font === 100) {                                          /* a knob's ring (ui_graph.c knob_arc): r px, the value's arc lo..hi */
+      const r = w[o + 9], lo = w[o + 10], hi = w[o + 11], th = r >= 14 ? 3 : 2, rr = (r - th / 2) * q;
+      const cx = (x + r) * q, cy = (y + r) * q, ang = (v) => (-90 + v * 270 / 768) * Math.PI / 180;
+      scrCtx.save();
+      scrCtx.beginPath();
+      scrCtx.rect(x0 * q, y0 * q, (x1 - x0) * q, (y1 - y0) * q);
+      scrCtx.clip();
+      scrCtx.lineCap = "round";
+      scrCtx.strokeStyle = css(w[o + 7] & 0xFFFF);                /* the pixels' ring wiped in what it lay on .. */
+      scrCtx.lineWidth = (th + 0.9) * q;
+      scrCtx.beginPath(); scrCtx.arc(cx, cy, rr, 0, 2 * Math.PI); scrCtx.stroke();
+      scrCtx.lineWidth = th * q;
+      scrCtx.strokeStyle = css(w[o + 6] & 0xFFFF);                /* .. its track, then the value over it */
+      scrCtx.beginPath(); scrCtx.arc(cx, cy, rr, ang(-384), ang(384)); scrCtx.stroke();
+      const a0 = Math.max(lo, -384), a1 = Math.min(hi, 384);
+      if (a1 >= a0 && hi > -385) {
+        scrCtx.strokeStyle = css(w[o + 12] & 0xFFFF);
+        scrCtx.beginPath(); scrCtx.arc(cx, cy, rr, ang(a0), ang(a1)); scrCtx.stroke();
+      }
+      scrCtx.restore();
+      continue;
+    }
+    let str = "";
+    for (let i = 0; i < len; i++) { const ch = b[o * 2 + 32 + i]; str += ch === 0x85 ? "\u2026" : String.fromCharCode(ch); }
+    if (font >= 2) str = str.toUpperCase();                      /* (L and V hold capitals only: gfx.c fold) */
+    scrCtx.save();
+    scrCtx.beginPath();
+    scrCtx.rect(x0 * q, y0 * q, (x1 - x0) * q, (y1 - y0) * q);
+    scrCtx.clip();
+    scrCtx.fillStyle = css(w[o + 7] & 0xFFFF);
+    scrCtx.fillRect((x + ix0) * q, (y + iy0) * q, (ix1 - ix0) * q, (iy1 - iy0) * q);   /* (the pixels' text: its ink's box) */
+    scrCtx.fillStyle = css(w[o + 6] & 0xFFFF);
+    scrCtx.font = `${SCR_PX[font] * q}px "Plex Screen", monospace`;
+    scrCtx.fillText(str, x * q, (y + asc) * q);
+    scrCtx.restore();
+  }
+}
 function scrPaint() {
   const cv = scrCv;
   cv.classList.toggle("fx", scrFx !== "net");
@@ -7958,7 +8034,10 @@ function scrPaint() {
       scrCtx.fillRect(0, x, W, lw);
     }
   }
-  scrScope(W / 240);
+  if (scrFx === "smooth") {
+    scrScope(W / 240);
+    scrText(W / 240);
+  }
 }
 try { new ResizeObserver(() => scrPaint()).observe(scrCv); } catch (e) { /* no observer: painted at each new picture */ }
 function scrSay(text, bad = false) { $("scr-status").textContent = text; $("scr-status").classList.toggle("bad", bad); }
