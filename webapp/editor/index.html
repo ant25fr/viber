@@ -96,6 +96,30 @@
                                                  with a sound: its corner cut, as on the device) */
   .pool button.unused { color: var(--dim); border-style: dashed; }
   .lists sub { font-size: 70%; }
+  /* ((Vibe 1.1) the Song tab's arrangement: a row a track, a bar 14 px; a block a button in its track's colour with its
+     pattern; the cursor an outline of the block a PUT would make; a track a clip took out dimmed, as on the device) */
+  .arr { display: grid; grid-template-columns: 2.4em 1fr; margin: 6px 0; }
+  .arr .lab { display: flex; flex-direction: column; }
+  .arr .lab span, .arr .ruler { height: 28px; line-height: 28px; font-variant-numeric: tabular-nums; }
+  .arr .lab span { font-weight: 700; padding-left: 2px; }
+  .arr .lab span.out { opacity: .45; }
+  .arr .scroll { overflow-x: auto; }
+  .arr .ruler { position: relative; height: 18px; line-height: 18px; font-size: 11px; color: var(--dim); }
+  .arr .ruler i { position: absolute; top: 0; font-style: normal; padding-left: 2px; }
+  .arr .row { position: relative; height: 26px; margin-bottom: 2px; background-color: var(--bg);
+    background-image: linear-gradient(90deg, var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--raise) 1px, transparent 1px);
+    background-size: calc(var(--bw, 14px) * 4) 100%, var(--bw, 14px) 100%; }
+  .arr .scroll { position: relative; }
+  .arr .blk { cursor: grab; touch-action: none; user-select: none; }
+  .arr .blk:active { cursor: grabbing; }
+  .arr .grip { position: absolute; right: 0; top: 0; bottom: 0; width: 7px; cursor: ew-resize; background: linear-gradient(90deg, transparent, rgba(0, 0, 0, .35)); }
+  .arr .play { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--fg); box-shadow: 0 0 4px var(--fg); pointer-events: none; z-index: 4; }
+  .arr .row.sel { background-color: var(--raise); }
+  .arr .blk { position: absolute; top: 1px; height: 24px; padding: 0 3px; min-width: 0; overflow: hidden; text-align: left; border: 0;
+    background: var(--s, var(--fg)); color: #000; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .arr .blk.out { opacity: .45; }
+  .arr .blk.pick { box-shadow: 0 0 0 2px var(--fg); z-index: 1; }
+  .arr .cur { position: absolute; top: 0; height: 26px; border: 2px solid var(--fg); box-sizing: border-box; pointer-events: none; z-index: 2; }
   .pool { display: grid; grid-template-columns: repeat(8, 2.8em); gap: 3px; }
   .seg button.kept { font-weight: 700; }
   table { border-collapse: collapse; }
@@ -380,6 +404,46 @@
   details.sqlist { margin-top: 10px; }
   details.sqlist summary { cursor: pointer; font: 700 14px "Barlow Condensed", sans-serif; letter-spacing: .04em; text-transform: uppercase; color: var(--dim); }
   [hidden] { display: none !important; }
+  /* ((Vibe 1.2) a lighter look over BLOCKS, tokens and rules only: one scale of space and corner, a focus ring everywhere
+     (the keyboard's way is seen), controls that answer a hover and a press, tiles with a hairline, bigger targets for a
+     finger, the page's width kept on narrow screens; nothing moves for those who asked it not to) */
+  :root { --r: 8px; --r-s: 5px; --ring: color-mix(in srgb, var(--fg) 80%, transparent); --hair: color-mix(in srgb, var(--line) 38%, transparent); }
+  main { padding: 20px 20px 48px; }
+  .group { border-radius: var(--r); box-shadow: inset 0 0 0 1px var(--hair); padding: 14px 16px 12px; }
+  .group + .group { margin-top: 12px; }
+  h2 { margin-bottom: 8px; }
+  .bar { gap: 8px 14px; margin-bottom: 10px; }
+  button, select, input[type=text], input[type=number], input[type=search] { border-radius: var(--r-s);
+    transition: background-color .12s ease, box-shadow .12s ease, opacity .12s ease, color .12s ease; }
+  button { min-height: 26px; }
+  button:active:not(:disabled) { transform: translateY(1px); }
+  select, input[type=text], input[type=number], input[type=search] { min-height: 26px; box-sizing: border-box; }
+  button:focus-visible, select:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visible,
+  [role="tab"]:focus-visible, summary:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+  .tabs { gap: 3px; }
+  .tabs button { border-radius: var(--r) var(--r) 0 0; }
+  .top { padding-top: 6px; box-shadow: 0 1px 0 var(--bg); }
+  .dim { line-height: 1.5; }
+  .lists button, .pool button { border-radius: var(--r-s); }
+  .row { padding-block: 1px; }
+  @media (pointer: coarse) {
+    button, select, input[type=text], input[type=number], input[type=search] { min-height: 38px; }
+    .tabs button { padding: 8px 14px; }
+    .lists button, .pool button { min-width: 2.9em; min-height: 34px; }
+  }
+  @media (max-width: 720px) {
+    main { padding: 12px 12px 40px; }
+    .group { padding: 10px 12px 8px; }
+    .bar { gap: 6px 10px; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: thin; }
+    .tabs button { flex: 0 0 auto; }
+    .lists, .pool { max-width: 100%; }
+    #sglists { overflow-x: auto; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    button, select, input { transition: none; }
+    button:active:not(:disabled) { transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -495,6 +559,17 @@
       <div id="sglists"></div>
       <p class="dim" id="sgapc" data-t="sgApc" hidden></p>
       <p class="bar" id="sgentry"></p>
+    </div>
+    <div class="group" id="sg-arr" hidden>
+      <h2 data-t="arTitle" data-ic="control_arrow_loop"></h2>
+      <p class="dim" data-t="arHelp"></p>
+      <p class="bar"><label><span data-t="arMode"></span> <select id="armode"><option value="1" data-t="arModeArr"></option>
+          <option value="0" data-t="arModeClips"></option></select></label>
+        <button id="arback" data-t="arBack"></button> <button id="arclear" data-t="arClear"></button>
+        <button id="arundo" data-t="arUndo" disabled></button> <button id="arredo" data-t="arRedo" disabled></button>
+        <label><span data-t="arZoom"></span> <input type="range" id="arzoom" min="6" max="28" value="14"></label></p>
+      <div class="arr" id="ararr"></div>
+      <p class="bar" id="arpick"></p>
     </div>
     <div class="group" id="sg-scenes" hidden>
       <h2 data-t="sgScenes"></h2>
@@ -642,7 +717,7 @@ const CMD = { INFO: 1, GET: 2, SET: 3, DUMP: 4, DESC: 5, STEP_GET: 6, STEP_SET: 
   UI_STATE: 34, UI_SET: 35, UI_PALETTES: 36, FAV_GET: 37, FAV_SET: 38, COLORS: 39,
   MOTION: 64, BACKUP_LIST: 65, BACKUP_GET: 66, BACKUP_PUT: 67,
   FM6_GET: 68, FM6_PUT: 69, FM6_LIST: 70, FM6_ERASE: 71, MENU_DESC: 72, MENU_SET: 73, KIT_GET: 74, KIT_PUT: 75, TRANSPORT: 76, PROJ_NAME: 77, POOL: 78, LIST: 79, PERFORM: 80,
-  SMP_MIX: 81, LIST2: 82, CAST: 83, PANEL: 84 };
+  SMP_MIX: 81, LIST2: 82, CAST: 83, PANEL: 84, ARR: 85 };
 /* frames the device sends on its own (while WATCH is on); never replies */
 const PUSH = new Set([CMD.CHANGED, CMD.RELOAD, CMD.STEP_CHANGED, CMD.TRACK_CHANGED]);
 /* user preset bank: name 1..12 printable ASCII, a 16-step pattern of (note, flags 1 acc 2 slide 4 tie) */
@@ -819,6 +894,7 @@ const parse = {
                                                      4 PERFORM, (#21) 5 SMP_MIX, (2.0, #25) 6 a step's ties */
     o.song2 = 0;                                  /* (2.0, INFO 58 01 caps) bit 0: LIST2, NEW, COPY+, CHAIN, ONCE, the pool's
                                                      EMPTY and CLEAR UNUSED */
+    o.arr = 0;                                    /* (Vibe 1.1, INFO 5A 01 caps) bit 0: the arrangement (cmd 85) */
     o.cast = 0;                                   /* (Skiff Studio, INFO 59 01 caps) bit 0: the cast (cmd 83), the Screen tab;
                                                      (2.7) bit 1: PANEL (cmd 84, an FM-1's); bit 2: an SMK-37's cast (its
                                                      copy: felucca_cast_smk.wasm) */
@@ -845,7 +921,8 @@ const parse = {
         r += 6;
       }
       if (trailer[r] === 0x58 && trailer[r + 1] === 1) { o.song2 = trailer[r + 2] & 127; r += 3; }   /* (2.0) the song's */
-      if (trailer[r] === 0x59 && trailer[r + 1] === 1) o.cast = trailer[r + 2] & 127;   /* (Skiff Studio) the cast, last */
+      if (trailer[r] === 0x59 && trailer[r + 1] === 1) { o.cast = trailer[r + 2] & 127; r += 3; }   /* (Skiff Studio) the cast */
+      if (trailer[r] === 0x5A && trailer[r + 1] === 1) o.arr = trailer[r + 2] & 127;   /* (Vibe 1.1) the arrangement, last */
     }
     o.light = o.light || { tracks: 0, engines: 0 };   /* the tracks that may not play some engines, and those engines */
     return o;
@@ -954,6 +1031,21 @@ const parse = {
     return o;
   },
   [CMD.LIST2](a, snd = false) { return parse[CMD.LIST](a, true, snd); },
+  /* (Vibe 1.1) ARR: op, rc (PUT: 0 done, 1 full, 2 not a place, 3 a pattern with no steps; DELETE: 1 no block there), ARR
+     on (false: CLIPS), the tracks a clip took out (a bit each), the block count (two bytes), each block in 4 bytes of 7
+     bits (25 bits low first: track 3, pattern 6, bar 8, length - 1 8): {trk, pat, start, len} (len in bars, 1..255); last
+     the playhead: playing, and pos, the 1/16 steps since PLAY (16 a bar) */
+  [CMD.ARR](a) {
+    const r = new Reader(a), o = { op: r.b(), rc: r.b(), on: !!r.b(), out: r.b(), count: 0, blocks: [] };
+    o.count = r.b() | r.b() << 7;
+    for (let i = 0; i < o.count && r.i + 4 <= a.length; i++) {
+      const w = r.b() | r.b() << 7 | r.b() << 14 | r.b() << 21;
+      o.blocks.push({ trk: w & 7, pat: w >> 3 & 63, start: w >> 9 & 255, len: (w >> 17 & 255) + 1 });
+    }
+    o.playing = false; o.pos = 0;                                   /* (last: the playhead; firmware before has none) */
+    if (r.i + 3 <= a.length) { o.playing = !!r.b(); o.pos = r.b() | r.b() << 7; }
+    return o;
+  },
   /* (Skiff W3) PERFORM: op, rc, LAUNCH (0 LOOP .. 3 NOW), the scene last recalled or stored (-1 none), the scenes kept
      (a bit each), each track: muted, its mute staged (0 none, 1 to unmute, 2 to mute) */
   [CMD.PERFORM](a) {
@@ -1167,6 +1259,13 @@ const req = {
   list: (op = 0, k = 0, e = 0, v = null, two = false) => [two ? CMD.LIST2 : CMD.LIST,
     !op ? [] : op === 6 ? [6, Math.max(0, Math.min(2, +k | 0))] : v == null ? [op, k, e] : [op, k, e, ...[v].flat().map((x) => x & 0x7F)]],
   perform: (op = 0, v = 0) => [CMD.PERFORM, !op ? [] : op === 4 ? [4] : [op, v]],   /* 1 STORE, 2 RECALL, 3 MUTE, 4 CANCEL, 5 LAUNCH */
+  /* (Vibe 1.1, INFO 5A 01) the arrangement: none: the blocks; 1 PUT pattern pat (0..63) on track k from bar bar (0..254) for
+     len bars (1..255), as OCT+ puts it; 2 DELETE the block of track k holding bar; 3 CLEAR; 4 BACK (every track follows the
+     arrangement again); 5 MODE (k: 1 ARR, 0 CLIPS) */
+  arr: (op = 0, k = 0, bar = 0, pat = 0, len = 1) => [CMD.ARR,
+    !op ? [] : op === 1 ? [1, k, bar >> 7 & 127, bar & 127, pat & 63, len >> 7 & 127, len & 127] :
+    op === 2 ? [2, k, bar >> 7 & 127, bar & 127] : op === 5 ? [5, k ? 1 : 0] :
+    op === 6 ? [6, k, bar >> 7 & 127, bar & 127, pat >> 7 & 127, pat & 127] : [op]],   /* 6 MOVE: the block holding bar to start at bar `pat` */
   projName: (op = 0, slot = 0, name = "") => [CMD.PROJ_NAME, op ? [op, slot & 3, ...strEnc(cleanProjName(name))] : []],   /* 1 SAVE AS, 2 RENAME */
 };
 /* (Skiff W3) the device's MENU settings, each as MENU_DESC describes it (none asked of firmware without them) */
@@ -1187,7 +1286,7 @@ function replyMatches(cmd, args, a) {
     case CMD.MENU_DESC: return a[0] === args[0];
     case CMD.MENU_SET: return a[1] === args[0];
     case CMD.KIT_GET: case CMD.KIT_PUT: return a[0] === args[0];
-    case CMD.PROJ_NAME: case CMD.POOL: case CMD.LIST: case CMD.LIST2: case CMD.PERFORM: return a[0] === (args[0] || 0);
+    case CMD.PROJ_NAME: case CMD.POOL: case CMD.LIST: case CMD.LIST2: case CMD.PERFORM: case CMD.ARR: return a[0] === (args[0] || 0);
     case CMD.BACKUP_GET: return a[0] === args[0] && a.slice(2, 7).every((v, i) => v === args[i + 1]);
     case CMD.BACKUP_PUT: return a[0] === args[0] && a[1] === args[1];
     case CMD.UI_SET: return a[1] === args[0] && a[2] === args[1];
@@ -2751,6 +2850,7 @@ function makeMockDevice(opt = {}) {
   const projOn = () => kitOn() && !opt.noProj;         /* (Skiff W3, INFO 57 01 03) TRANSPORT, PROJ_NAME */
   const songOn = () => projOn() && !opt.noSong;        /* (Skiff W3, INFO 57 01 31) POOL, LIST, PERFORM */
   const tiesOn = () => songOn() && !opt.noTies;        /* ((2.0, #25) INFO 57 01 bit 6) a step's ties after its NUDGE */
+  const arrOn = () => songOn() && !opt.noArr;           /* ((Vibe 1.1) INFO 5A 01: ARR, cmd 85) */
   const song2On = () => songOn() && !opt.noSong2;      /* ((2.0) INFO 58 01: LIST2, NEW, COPY+, CHAIN, ONCE, the pool's 2 3) */
   const sndM = () => song2On() && !opt.noSnd;         /* ((2.0, #30) INFO 58 01 bit 1: LIST2's entry sounds, its op 9) */
   const stepOut = (x, b) => { b(x.n); x.notes.forEach(b); b(x.time); b(x.flags); b(x.vel); hitsEnc(x.hit, x.acc).forEach(b); if (!opt.legacy && !opt.v3 && !opt.v5) b(x.chance ?? 100); if (ratchetOn()) b(x.ratchet ?? 1);
@@ -2852,6 +2952,7 @@ function makeMockDevice(opt = {}) {
       if (projOn()) [0x49, 1, P_COUNT & 127, P_COUNT >> 7, P_E0 & 127, P_E0 >> 7].forEach(b);   /* ((Skiff 1.3) wide ids) */
       if (song2On()) [0x58, 1, sndM() ? 3 : 1].forEach(b);     /* ((2.0) LIST2, NEW, COPY+, CHAIN, ONCE, EMPTY, UNUSED;
                                                                    (#30) bit 1 the entries' sounds) */
+      if (arrOn()) [0x5A, 1, 1].forEach(b);                    /* ((Vibe 1.1) the arrangement, cmd 85) */
     };
     const wid = (s, i) => (s === 2 ? [0, i + 128] : [s, i]);   /* ((1.3) scope 2: a track id from 128 on) */
     if (opt.legacy && cmd >= CMD.UP_LIST) return null;
@@ -3092,6 +3193,44 @@ function makeMockDevice(opt = {}) {
         }
         b(rc); b(cu.flags & 3); b(cu.flags & 1 ? cu.look : 0);
         pack7(cu.c.flatMap((x) => [x & 255, x >> 8])).forEach(b);
+        break;
+      }
+      case CMD.ARR: {                          /* (Vibe 1.1) editor_song.c: the arrangement's blocks, as bank.c arr_put cuts them */
+        const [op] = a, A = st.arr = st.arr || { on: 1, out: 0, blocks: [] }, bar = a[2] << 7 | a[3], bars = 255;
+        const good = !a.length || (op === 1 ? a.length === 7 && a[1] < NTRK && bar < bars && a[4] < 64 && (a[5] << 7 | a[6]) >= 1 && (a[5] << 7 | a[6]) <= 255 :
+          op === 2 ? a.length === 4 && a[1] < NTRK && bar < bars : op === 5 ? a.length === 2 && a[1] <= 1 :
+          op === 6 ? a.length === 6 && a[1] < NTRK && bar < bars && (a[4] << 7 | a[5]) < bars : (op === 3 || op === 4) && a.length === 1);
+        if (!arrOn() || !good) return null;
+        let rc = 0;
+        const at = (k, x) => A.blocks.findIndex((q) => q.trk === k && q.start <= x && x < q.start + q.len);
+        if (op === 1) {
+          if (!st.pool[a[4]]) rc = 3;
+          else {
+            const k = a[1], f = at(k, bar);
+            if (f >= 0 && A.blocks[f].start === bar) A.blocks.splice(f, 1);
+            else if (f >= 0) A.blocks[f].len = bar - A.blocks[f].start;
+            const next = A.blocks.filter((q) => q.trk === k && q.start > bar).map((q) => q.start - bar);
+            const len = Math.min(a[5] << 7 | a[6], bars - bar, ...next);
+            if (A.blocks.length >= 128) rc = 1;
+            else { A.blocks.push({ trk: k, pat: a[4], start: bar, len }); A.blocks.sort((x, y) => x.trk - y.trk || x.start - y.start); }
+          }
+        } else if (op === 2) { const f = at(a[1], bar); if (f < 0) rc = 1; else A.blocks.splice(f, 1); }
+        else if (op === 6) {
+          const f = at(a[1], bar), to = a[4] << 7 | a[5];
+          if (f < 0) rc = 1;
+          else {
+            const q = A.blocks[f];
+            if (to + q.len > bars || A.blocks.some((o) => o !== q && o.trk === q.trk && to < o.start + o.len && o.start < to + q.len)) rc = 2;
+            else q.start = to;
+          }
+        }
+        else if (op === 3) { A.blocks = []; A.out = 0; }
+        else if (op === 4) { A.on = 1; A.out = 0; }
+        else if (op === 5) A.on = a[1];
+        [a.length ? op : 0, rc, A.on, A.out, A.blocks.length & 127, A.blocks.length >> 7].forEach(b);
+        for (const q of A.blocks) { const w = q.trk | q.pat << 3 | q.start << 9 | q.len - 1 << 17; b(w); b(w >> 7); b(w >> 14); b(w >> 21); }
+        if (st.playing) A.pos = ((A.pos || 0) + 11) % (16 * 40); else A.pos = 0;   /* (the mock's playhead: a bar and a bit a request) */
+        b(st.playing ? 1 : 0); b(A.pos); b(A.pos >> 7);                       /* (the playhead: 1/16 steps since PLAY) */
         break;
       }
       case CMD.PERFORM: {                      /* (Skiff W3) editor_song.c */
@@ -3673,6 +3812,9 @@ const TEXT = {
     noName: "（名前なし）", projNow: "現在", projChanged: "保存後に変更あり",
     projRefused: "本体が受け付けませんでした（空のスロット、またはパターンがいっぱい）", projFailed: "本体での保存に失敗しました",
     play: "再生", stop: "停止", playTitle: "再生（Shift+クリック: 頭から）", playing: "再生中", stopped: "停止中", countIn: "カウントイン",
+    arTitle: "アレンジメント", arHelp: "本体の HOME 画面の3つ目のビューと同じタイムラインです。ブロックはプールのパターンをトラックの小節に置いたもので、クリップからは録音されません。ブロックはドラッグで移動（別のトラックにも）、右端のドラッグで長さを変更、矢印キーで移動（SHIFT で長さ）、Delete で削除、Ctrl+Z で取り消せます。または、トラックの行をクリックして小節を、ブロックをクリックして選択します。下でパターンと長さを決めて PUT（そこにあるブロックは置き換え、途中から始まる場合は前のブロックを短縮し、次のブロックの手前で終わります）。クリップを起動したトラックは BACK までアレンジメントから外れます。",
+    arMode: "トラックの再生", arModeArr: "ARR（アレンジメント）", arModeClips: "CLIPS（ランチャー）", arBack: "アレンジメントに戻す", arClear: "すべて消去", arPut: "PUT", arDelete: "ブロックを削除",
+    arPattern: "パターン", arLength: "小節数", arBar: "小節", arOut: "クリップで外れています", arFull: "アレンジメントがいっぱいです（128 ブロック）", arBadPlace: "ブロックを置けない場所です", arNoSteps: "そのパターンにはステップがありません", arNoBlock: "そこにブロックはありません", arConfirmClear: "アレンジメント全体を消去しますか？", arUndo: "元に戻す", arRedo: "やり直す", arZoom: "ズーム", arBlocked: "ほかのブロックが邪魔をしています",
     sgTab: "ソング", sgHelp: "各トラックはリスト（A〜P）のエントリーを演奏し、各エントリーはプールのパターンを指します（本体の SEQ › SONG）。シーンとミュートは PERFORM と同じです。エントリーをクリックすると下のボタンの対象になり、ダブルクリック（または PLAY）でトラックがそのエントリーに移ります。シーケンサータブは各トラックが今いるエントリーを編集します。停止中の NEW は、トラックを新しいエントリーに移します。停止中はすぐに、再生中は LAUNCH のタイミングで切り替わります。",
     sgLists: "リスト", sgSong: "SONG（各トラックがリストを順に進む。ONCE: 一度だけ進んで停止）", sgLaunch: "LAUNCH", sgCancel: "予約を取り消す",
     sgPattern: "パターン", sgSet: "設定", sgCopy: "新しいパターンにコピー", sgPlay: "再生", sgClear: "クリア", sgEmptyEntry: "空",
@@ -3836,6 +3978,9 @@ const TEXT = {
     noName: "(no name)", projNow: "Now", projChanged: "changed since saved",
     projRefused: "The device refused (an empty slot, or the patterns are full)", projFailed: "Saving failed on the device",
     play: "Play", stop: "Stop", playTitle: "Play (Shift+click: from the top)", playing: "Playing", stopped: "Stopped", countIn: "Count-in",
+    arTitle: "Arrangement", arHelp: "The timeline the HOME page's third view shows on the device: a block is a pattern of the pool on a track's bars, put wherever you like, nothing recorded from the clips. Drag a block to move it (to another track too), drag its right edge for its length, arrows move it (SHIFT: its length), Delete takes it off; Ctrl+Z undoes. Or click a track's row for a bar, a block to pick it; the pattern and length below, then PUT (a block there is replaced, the one it starts inside cut, its end where the next begins). A track a clip was launched on leaves the arrangement until BACK.",
+    arMode: "Tracks follow", arModeArr: "ARR (the arrangement)", arModeClips: "CLIPS (the launcher)", arBack: "Back to the arrangement", arClear: "Clear all", arPut: "PUT", arDelete: "Delete block",
+    arPattern: "Pattern", arLength: "Bars", arBar: "Bar", arOut: "a clip took it out", arFull: "The arrangement is full (128 blocks)", arBadPlace: "Not a place for a block", arNoSteps: "That pattern has no steps", arNoBlock: "No block there", arConfirmClear: "Clear the whole arrangement?", arUndo: "Undo", arRedo: "Redo", arZoom: "Zoom", arBlocked: "Another block is in the way",
     sgTab: "Song", sgHelp: "Each track plays the entries of its list (A to P), each naming a pattern of the pool, as on SEQ › SONG; the scenes and mutes are PERFORM's. Click an entry to pick it for the buttons below; double-click it (or PLAY) to put the track on it. The Sequencer tab edits the entry each track is on, and NEW puts the track on its new entry while stopped. Stopped, a change is at once; playing, at the LAUNCH point.",
     sgLists: "Lists", sgSong: "SONG (each track moves through its list; ONCE: once through, then stop)", sgLaunch: "LAUNCH", sgCancel: "Cancel staged",
     sgPattern: "Pattern", sgSet: "Set", sgCopy: "Copy to a new pattern", sgPlay: "Play", sgClear: "Clear", sgEmptyEntry: "empty",
@@ -4037,9 +4182,10 @@ $("tplay").addEventListener("click", (e) => transportOp(e.shiftKey ? 3 : 1));
    (PERFORM), the pattern pool (SAVE › PATTERNS), as the device has them: read when the tab opens, then as the
    keep-alive while it shows (with the transport; the pool each 4th time), and after each change. A change acts as the
    device's control does (it says so on its screen); no retries: a COPY sent twice would copy twice) */
-let sgPick = { k: 0, e: 0 }, poolPick = 0;
+let sgPick = { k: 0, e: 0 }, poolPick = 0, arPick = { k: 0, bar: 0, pat: -1, len: 4 };   /* ((Vibe 1.1) arPick: the arrangement's cursor) */
 const ENTS = "ABCDEFGHIJKLMNOP", pat2 = (n) => String(n).padStart(2, "0");
 const SG_RC = { list: [null, "sgEmpty", "sgAutoFull", "sgStopClear", "sgFull", "sgFailed"], snd: [null, "sgSndRefused"],
+  arrPut: [null, "arFull", "arBadPlace", "arNoSteps"], arrDel: [null, "arNoBlock"], arrMove: [null, "arNoBlock", "arBlocked"],
   pool: [null, "sgNothing", "sgInUse", "sgStopClear", "sgFailed"], perf: [null, "sgEmpty", "sgAutoFull", null, "sgFull"] };
 async function readSong(d = dev, pool = true, poll = false) {
   if (!d || !d.info || !(d.info.skiff & 28)) return;
@@ -4052,6 +4198,7 @@ async function readSong(d = dev, pool = true, poll = false) {
   }
   if (d.info.skiff & 16) s.perf = parse[CMD.PERFORM](await rqs(req.perform()));
   if (d.info.skiff & 4 && (pool || !s.pool)) s.pool = parse[CMD.POOL](await rqs(req.pool()));
+  if (d.info.arr & 1) s.arr = parse[CMD.ARR](await rqs(req.arr()));   /* ((Vibe 1.1) the arrangement) */
   if (d === dev) { renderSong(); apcShow(); }
 }
 /* (2.0, INFO 58 01) the device has LIST2 (SONG ONCE, the chains), NEW, COPY+ and the pool's EMPTY, CLEAR UNUSED; a LIST
@@ -4172,11 +4319,13 @@ function renderSong() {
   $("sg-lists").hidden = !(caps & 8);
   $("sg-scenes").hidden = !(caps & 16);
   $("sg-pool").hidden = !(caps & 4);
+  $("sg-arr").hidden = !(d && d.info && d.info.arr & 1);   /* ((Vibe 1.1) the arrangement) */
   if (!s) return;
-  const sig = JSON.stringify([s.list, s.perf, s.pool, sgPick, poolPick, lang]);
-  if (sig === renderSong.sig) return;
+  const sig = JSON.stringify([s.list, s.perf, s.pool, s.arr && [s.arr.on, s.arr.out, s.arr.blocks], sgPick, poolPick, arPick, lang]);
+  if (sig === renderSong.sig) { arrPlayhead(); return; }   /* ((Vibe 1.1) the playhead moves without the page drawn again) */
   renderSong.sig = sig;
   const L = s.list, P = s.perf, Q = s.pool, two = song2();
+  renderArr(s.arr, Q);
   if (L) {
     $("sgsong").value = String(+L.song);
     $("sgsong").options[2].disabled = !two;               /* ((2.0) ONCE) */
@@ -4220,6 +4369,195 @@ function renderSong() {
         onclick: () => { if (confirm(t("sgConfirmUnused").replace("{n}", un))) songOp(req.pool(null, 3), "pool"); } }, t("sgClearUnused").replace("{n}", un))] : []));
   }
 }
+/* ((Vibe 1.1) INFO 5A 01) the arrangement: a row a track, a bar arBW px (the zoom), the blocks as buttons; arPick the track,
+   bar, pattern and length a PUT makes (a block picked fills them). A row's empty part picks its bar; a block drags to another
+   bar or track (MOVE; across tracks a PUT then a DELETE, refused where it would overlap), its right edge drags its length, the
+   arrows move it (SHIFT: its length), Delete takes it off; every change can be undone (arUndo / arRedo keep the blocks as they
+   were, and put them back by what differs). The playhead follows the device while it plays (arrPlayhead, polled 4 times a
+   second). The controls under the timeline are left alone while one has focus */
+let arBW = (() => { try { return Math.max(6, Math.min(28, +localStorage.getItem("arZoom") || 14)); } catch (e) { return 14; } })();
+const AR_ROW = 28, arUndo = [], arRedo = [];
+let arFocus = null;
+const arKey = (b) => `${b.trk},${b.start},${b.len},${b.pat}`;
+const arClone = (bl) => bl.map((b) => ({ ...b }));
+function arrRun(steps) {                         /* [request, kind] one after another, then the song read again */
+  const d = dev;
+  op(async () => {
+    for (const [r, kind] of steps) {
+      const x = parse[CMD.ARR](await sessionRequest(d, r, { timeout: 4000, retries: 0 }));
+      const k = x.rc && SG_RC[kind][x.rc];
+      if (k) { sayK(k); break; }
+    }
+    await readSong(d, true);
+  });
+}
+function arrChange(steps) {                      /* a change: what is there now kept for UNDO, REDO forgotten */
+  const A = dev && dev.song && dev.song.arr;
+  if (A) { arUndo.push(arClone(A.blocks)); if (arUndo.length > 50) arUndo.shift(); arRedo.length = 0; }
+  arrRun(steps);
+}
+function arrApply(target) {                      /* the blocks as target has them, by what differs from the device's */
+  const d = dev;
+  op(async () => {
+    const cur = parse[CMD.ARR](await sessionRequest(d, req.arr(), { timeout: 4000, retries: 0 })).blocks;
+    const tk = new Set(target.map(arKey)), ck = new Set(cur.map(arKey));
+    for (const b of cur) if (!tk.has(arKey(b))) await sessionRequest(d, req.arr(2, b.trk, b.start), { timeout: 4000, retries: 0 });
+    for (const b of target.slice().sort((x, y) => x.trk - y.trk || x.start - y.start))
+      if (!ck.has(arKey(b))) await sessionRequest(d, req.arr(1, b.trk, b.start, b.pat, b.len), { timeout: 4000, retries: 0 });
+    await readSong(d, true);
+  });
+}
+function arrUndo(redo = false) {
+  const A = dev && dev.song && dev.song.arr, from = redo ? arRedo : arUndo, to = redo ? arUndo : arRedo;
+  if (!A || !from.length) return;
+  to.push(arClone(A.blocks));
+  arrApply(from.pop());
+  renderSong.sig = null;
+}
+function arrMoveTo(b, trk, start) {              /* block b to start at bar `start` on track trk */
+  const A = dev.song.arr;
+  start = Math.max(0, Math.min(255 - b.len, start));
+  if (trk === b.trk && start === b.start) return;
+  if (trk === b.trk) { arrChange([[req.arr(6, b.trk, b.start, start), "arrMove"]]); arPick = { ...arPick, k: trk, bar: start }; return; }
+  if (A.blocks.some((o) => o.trk === trk && start < o.start + o.len && o.start < start + b.len)) { sayK("arBlocked"); return; }
+  arrChange([[req.arr(1, trk, start, b.pat, b.len), "arrPut"], [req.arr(2, b.trk, b.start), "arrDel"]]);
+  arPick = { ...arPick, k: trk, bar: start };
+}
+function arrResize(b, len) {
+  len = Math.max(1, Math.min(255 - b.start, len));
+  if (len !== b.len) arrChange([[req.arr(1, b.trk, b.start, b.pat, len), "arrPut"]]);
+}
+let arDrag = false;                              /* a block is being dragged: the timeline is not drawn again under it */
+function arrBlockDrag(ev, e0, b, mode) {         /* block b (button e0) dragged by its body (to another bar or track) or its right edge (length) */
+  if (ev.button > 0 || !dev) return;
+  const x0 = ev.clientX, y0 = ev.clientY;
+  let moved = false;
+  arDrag = true;
+  try { e0.setPointerCapture(ev.pointerId); } catch (e) { /* a pointer that is gone */ }
+  const move = (e) => {
+    const dx = Math.round((e.clientX - x0) / arBW), dy = Math.round((e.clientY - y0) / AR_ROW);
+    if (Math.abs(e.clientX - x0) + Math.abs(e.clientY - y0) > 3) moved = true;
+    if (!moved) return;
+    if (mode === "move") { e0.style.transform = `translate(${dx * arBW}px, ${dy * AR_ROW}px)`; e0.style.zIndex = 3; }
+    else e0.style.width = `${Math.max(1, Math.min(255 - b.start, b.len + dx)) * arBW}px`;
+  };
+  const up = (e) => {
+    e0.removeEventListener("pointermove", move); e0.removeEventListener("pointerup", up); e0.removeEventListener("pointercancel", cancel);
+    arDrag = false;
+    const dx = Math.round((e.clientX - x0) / arBW), dy = Math.round((e.clientY - y0) / AR_ROW);
+    if (!moved) { arPick = { k: b.trk, bar: b.start, pat: b.pat, len: b.len }; renderSong.sig = null; renderSong(); return; }
+    if (mode === "move") arrMoveTo(b, Math.max(0, Math.min(5, b.trk + dy)), b.start + dx);
+    else arrResize(b, b.len + dx);
+    renderSong.sig = null; renderSong();
+  };
+  const cancel = () => { arDrag = false; e0.removeEventListener("pointermove", move); e0.removeEventListener("pointerup", up); e0.removeEventListener("pointercancel", cancel); renderSong.sig = null; renderSong(); };
+  e0.addEventListener("pointermove", move); e0.addEventListener("pointerup", up); e0.addEventListener("pointercancel", cancel);
+}
+function arrBlockKey(ev, b) {
+  const sh = ev.shiftKey;
+  if (ev.key === "ArrowLeft" || ev.key === "ArrowRight") {
+    ev.preventDefault();
+    const d = ev.key === "ArrowLeft" ? -1 : 1;
+    if (sh) arrResize(b, b.len + d);
+    else { arFocus = `a${b.trk}:${Math.max(0, Math.min(255 - b.len, b.start + d))}`; arrMoveTo(b, b.trk, b.start + d); }
+  } else if (ev.key === "Delete" || ev.key === "Backspace") {
+    ev.preventDefault();
+    arrChange([[req.arr(2, b.trk, b.start), "arrDel"]]);
+  }
+}
+function arrPlayhead() {                         /* the line at the device's playhead; the view follows it */
+  const A = dev && dev.song && dev.song.arr, sc = document.querySelector("#ararr .scroll");
+  if (!sc) return;
+  let ph = sc.querySelector(".play");
+  if (!A || !A.playing) { if (ph) ph.hidden = true; return; }
+  if (!ph) { ph = el("div", { class: "play", "aria-hidden": "true" }); sc.append(ph); }
+  const x = (A.pos / 16) * arBW;
+  ph.hidden = false;
+  ph.style.left = `${x}px`;
+  if (x < sc.scrollLeft || x > sc.scrollLeft + sc.clientWidth - 24) sc.scrollLeft = Math.max(0, x - 48);
+}
+function renderArr(A, Q) {
+  const d = dev, box = $("sg-arr");
+  if (!A || !d || !(d.info.arr & 1) || arDrag) return;
+  const bars = Math.min(255, Math.max(32, Math.ceil((Math.max(0, ...A.blocks.map((b) => b.start + b.len)) + 8) / 8) * 8));
+  const used = Q ? Q.pats.map((p, i) => (p.len ? i : -1)).filter((i) => i >= 0) : [];
+  if (arPick.pat < 0 || (used.length && !used.includes(arPick.pat))) arPick.pat = used.length ? used[0] : 0;
+  $("armode").value = String(+A.on);
+  $("arundo").disabled = !arUndo.length;
+  $("arredo").disabled = !arRedo.length;
+  $("arzoom").value = String(arBW);
+  const at = A.blocks.find((b) => b.trk === arPick.k && b.start <= arPick.bar && arPick.bar < b.start + b.len);
+  const rows = [];
+  for (let k = 0; k < 6; k++) {
+    const out = (A.out >> k) & 1;
+    const row = el("div", { class: k === arPick.k ? "row sel" : "row", style: `width:${bars * arBW}px;--bw:${arBW}px`,
+      onclick: (ev) => { if (ev.target !== row) return; arPick = { ...arPick, k, bar: Math.min(254, Math.floor(ev.offsetX / arBW)) }; renderSong.sig = null; renderSong(); } });
+    for (const b of A.blocks.filter((x) => x.trk === k)) {
+      const grip = el("span", { class: "grip", "aria-hidden": "true", onpointerdown: (ev) => { ev.stopPropagation(); arrBlockDrag(ev, ev.currentTarget.parentNode, b, "size"); } });
+      const btn = el("button", { type: "button", "data-key": `a${k}:${b.start}`, class: ["blk", out ? "out" : "", at === b ? "pick" : ""].filter(Boolean).join(" "),
+        style: `left:${b.start * arBW}px;width:${b.len * arBW}px;--s:var(--t${k + 1})`,
+        title: `T${k + 1} ${t("arBar")} ${b.start + 1}: ${pat2(b.pat + 1)} × ${b.len}`,
+        "aria-label": `T${k + 1} ${t("arBar")} ${b.start + 1}: ${pat2(b.pat + 1)}, ${b.len}`,
+        onpointerdown: (ev) => { if (!ev.target.classList.contains("grip")) arrBlockDrag(ev, ev.currentTarget, b, "move"); },
+        onkeydown: (ev) => arrBlockKey(ev, b) }, pat2(b.pat + 1), grip);
+      row.append(btn);
+    }
+    if (k === arPick.k) row.append(el("div", { class: "cur", style: `left:${arPick.bar * arBW}px;width:${Math.min(arPick.len, 255 - arPick.bar) * arBW}px` }));
+    rows.push(row);
+  }
+  const ruler = el("div", { class: "ruler", style: `width:${bars * arBW}px` },
+    ...Array.from({ length: Math.ceil(bars / 4) }, (_, i) => el("i", { style: `left:${i * 4 * arBW}px`, text: String(i * 4 + 1) })));
+  const labs = el("div", { class: "lab" }, el("span", { class: "ruler", style: "height:18px;line-height:18px", text: "" }),
+    ...[0, 1, 2, 3, 4, 5].map((k) => el("span", { class: (A.out >> k) & 1 ? "out" : null, style: `height:${AR_ROW}px;color:var(--t${k + 1})`,
+      title: (A.out >> k) & 1 ? t("arOut") : null, text: `T${k + 1}` })));
+  const prev = document.querySelector("#ararr .scroll"), sl = prev ? prev.scrollLeft : 0;
+  keepFocus(box, () => $("ararr").replaceChildren(labs, el("div", { class: "scroll" }, ruler, ...rows)));
+  const sc = document.querySelector("#ararr .scroll");
+  if (sc) sc.scrollLeft = sl;                                 /* (a redraw keeps the view where it was) */
+  if (arFocus) { const n = box.querySelector(`[data-key="${arFocus}"]`); if (n) n.focus(); arFocus = null; }
+  arrPlayhead();
+  const ctl = $("arpick");
+  if (ctl.contains(document.activeElement)) return;
+  const sel = el("select", { "aria-label": t("arPattern") }, ...(used.length ? used : [0]).map((i) => el("option", { value: i, text: pat2(i + 1) })));
+  sel.value = String(arPick.pat);
+  sel.addEventListener("change", () => { arPick.pat = +sel.value; });
+  const len = el("input", { type: "number", min: 1, max: 255 - arPick.bar, value: arPick.len, style: "width:5em", "aria-label": t("arLength") });
+  len.addEventListener("change", () => { arPick.len = Math.max(1, Math.min(255 - arPick.bar, +len.value | 0)); renderSong.sig = null; renderSong(); });
+  const barIn = el("input", { type: "number", min: 1, max: 255, value: arPick.bar + 1, style: "width:5em", "aria-label": t("arBar") });
+  barIn.addEventListener("change", () => { arPick.bar = Math.max(0, Math.min(254, (+barIn.value | 0) - 1)); renderSong.sig = null; renderSong(); });
+  ctl.replaceChildren(el("strong", { text: `T${arPick.k + 1}` }), " ",
+    el("label", {}, el("span", { class: "dim", text: t("arBar") }), " ", barIn), " ",
+    el("label", {}, el("span", { class: "dim", text: t("arPattern") }), " ", sel), " ",
+    el("label", {}, el("span", { class: "dim", text: t("arLength") }), " ", len), " ",
+    el("button", { type: "button", disabled: !used.length,
+      onclick: () => { arPick.len = Math.max(1, Math.min(255 - arPick.bar, +len.value | 0)); arrChange([[req.arr(1, arPick.k, arPick.bar, +sel.value, arPick.len), "arrPut"]]); } }, t("arPut")),
+    el("button", { type: "button", disabled: !at, onclick: () => arrChange([[req.arr(2, arPick.k, arPick.bar), "arrDel"]]) }, t("arDelete")));
+}
+$("armode").addEventListener("change", () => arrRun([[req.arr(5, +$("armode").value), "arrDel"]]));
+$("arback").addEventListener("click", () => arrRun([[req.arr(4), "arrDel"]]));
+$("arclear").addEventListener("click", () => { if (confirm(t("arConfirmClear"))) arrChange([[req.arr(3), "arrDel"]]); });
+$("arundo").addEventListener("click", () => arrUndo(false));
+$("arredo").addEventListener("click", () => arrUndo(true));
+$("arzoom").addEventListener("input", () => {
+  arBW = +$("arzoom").value;
+  try { localStorage.setItem("arZoom", String(arBW)); } catch (e) { /* private window */ }
+  renderSong.sig = null; renderSong();
+});
+document.addEventListener("keydown", (ev) => {     /* Ctrl / Cmd + Z, + SHIFT: undo, redo, on the Song tab but not in a field */
+  if (tab !== "song" || !(ev.ctrlKey || ev.metaKey) || ev.key.toLowerCase() !== "z" || /^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement && document.activeElement.tagName)) return;
+  if ($("sg-arr").hidden) return;
+  ev.preventDefault();
+  arrUndo(ev.shiftKey);
+});
+setInterval(() => {                                 /* the playhead: while the device plays, 4 times a second */
+  const d = dev, A = d && d.song && d.song.arr;
+  if (!A || !A.playing || tab !== "song" || document.hidden || busy || !d.link.idle || keepAlive.song) return;
+  keepAlive.song = true;
+  sessionRequest(d, req.arr(), { quiet: true, retries: 0 }).then((a) => {
+    const x = parse[CMD.ARR](a);
+    if (d === dev && d.song && d.song.arr) { d.song.arr.pos = x.pos; d.song.arr.playing = x.playing; arrPlayhead(); }
+  }).catch(() => {}).finally(() => { keepAlive.song = false; });
+}, 250);
 /* the entry picked: its pattern (REST, the kept ones: the device's KNOB 2 order), SET, ((2.0) NEW), COPY, ((2.0) COPY+:
    its chain's room shown), PLAY, REPS, CLEAR (a REST's at once: nothing goes with it); left alone while one of them has
    focus */
