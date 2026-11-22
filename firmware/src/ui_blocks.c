@@ -281,6 +281,7 @@ static int32_t kn_angle(int32_t dx, int32_t dy)
 static void knob_ring(int32_t ratio, uint16_t fill, uint16_t track, uint16_t arc, uint16_t body)
 {
     int32_t x, y, prog = ratio * KN_SWEEP / 1000;
+    WEB_RING_DRAW(KN_CX, KN_CY + cv_oy, ratio, fill, track, arc, body);
     for (y = KN_CY - 18; y <= KN_CY + 18; y++)
         for (x = KN_CX - 18; x <= KN_CX + 18; x++) {
             int32_t dx4 = 4 * x + 2 - 4 * KN_CX, dy4 = 4 * y + 2 - 4 * KN_CY;

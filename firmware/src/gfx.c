@@ -39,6 +39,13 @@ typedef struct { uint16_t off; uint8_t w; const char *label; } kc_t;
 #ifndef GFX_HOOKS
 #define GFX_HOOKS 1
 #endif
+#ifndef WEB_TXT_BEGIN                           /* ((Vibe 1.2) the browser build keeps every text drawn as data: felucca_web.c) */
+#define WEB_TXT_BEGIN() ((void)0)
+#define WEB_TXT_BLIT(x, y, r0) ((void)0)
+#define WEB_TXT_DRAW(x, y, f, s, fg, bg, pen) ((void)0)
+#define WEB_ARC_DRAW(x, y, r, lo, hi, tr, vc, bg) ((void)0)
+#define WEB_RING_DRAW(cx, cy, ratio, fill, track, arc, body) ((void)0)   /* (STYLE BLOCKS' knob: ui_blocks.c knob_ring) */   /* (a knob's ring: ui_graph.c knob_arc) */
+#endif
 #ifndef GFX_HOOK_CELL
 #define GFX_HOOK_CELL(x0, y0, x1, y1) ((void)0)    /* a cell, card, row or button (cv_rrect): a box touching it lies inside it */
 #endif
@@ -194,6 +201,7 @@ static void cv_begin(uint32_t w, uint32_t h, uint16_t bg)
         h = CV_MAX / w;
     lcd_sync();                     /* the last blit may still read cv_px */
     GFX_HOOK_BEGIN();
+    WEB_TXT_BEGIN();
     cv_w = w;
     cv_h = h;
     cv_cy0 = 0;
@@ -207,6 +215,7 @@ static void cv_begin(uint32_t w, uint32_t h, uint16_t bg)
 static void cv_blit(uint32_t x, uint32_t y)
 {
     GFX_HOOK_BLIT(x, y, 0u);
+    WEB_TXT_BLIT(x, y, 0u);
     lcd_blit(x, y, cv_w, cv_h, cv_px);
 }
 
@@ -214,6 +223,7 @@ static void cv_blit(uint32_t x, uint32_t y)
 static void cv_blit_from(uint32_t x, uint32_t y, uint32_t r0)
 {
     GFX_HOOK_BLIT(x, y, r0);
+    WEB_TXT_BLIT(x, y, r0);
     if (r0 < cv_h)
         lcd_blit(x, y + r0, cv_w, cv_h - r0, cv_px + r0 * cv_w);
 }
@@ -553,6 +563,7 @@ static int32_t cv_text_flags(int32_t x, int32_t y, const aafont_t *f, const char
                              uint32_t flags)
 {
     int32_t b[4], pen = text_run(x, y, f, s, ramp(fg, bg), b);
+    WEB_TXT_DRAW(x, y + cv_oy, f, s, fg, bg, pen);
     if (GFX_HOOKS && b[2] > b[0]) {
         int32_t y0 = b[1], y1 = b[3];
         if (b[0] < 0 || b[2] > (int32_t)cv_w || y0 + cv_oy < cv_cy0 || y1 + cv_oy > cv_cy1)

@@ -1951,6 +1951,7 @@ static void knob_arc(int32_t x, int32_t y, int32_t r, const uint8_t *cov, const 
 {
     const uint16_t *rt = ramp(tr, bg), *rv = ramp(vc, bg);
     int32_t i, j, m;
+    WEB_ARC_DRAW(x, y + cv_oy, r, lo, hi, tr, vc, bg);
     for (j = 0; j < r; j++)
         for (i = 0; i < r; i++) {
             uint32_t k = (uint32_t)(j * r + i), a = (cov[k >> 1] >> ((k & 1u) ? 0 : 4)) & 15u;

@@ -151,6 +151,28 @@ static void fm1_irq_on(void) {}
 #endif
 static uint16_t web_fb[240 * 240];       /* RGB565 as the panel gets it (high byte first) */
 static uint32_t web_draws;
+/* ((Vibe 1.2) the editor's HD text) every text drawn (gfx.c cv_text_flags) is kept as data for as long as the screen shows it, so
+ * the page can draw it again with the face it was made from (IBM Plex Mono: tools/build.py's preset) at its display's
+ * resolution. An item is 36 16-bit words: 0..3 the box it may show in (screen x0 y0 x1 y1: its canvas's blit), 4 5 the
+ * pen x and the line's top, 6 7 ink and background (RGB565), 8 face (0 S, 1 M, 2 L, 3 V), 9 its length, 10 its advance
+ * (1/16 px), 11 the face's baseline, 12 14 the ink's top and bottom rows from the line's top, 10 15 its left and right
+ * columns from the pen, then (from word 16) the characters (at most 44, as the unit's codes).
+ * A canvas's items wait (web_tp) until it is sent to the panel; what a piece sent to the panel covers loses its items. */
+#define WEB_TXT_MAX 256u
+#define WEB_TXT_LEN 44u
+typedef struct { int16_t w[16 + WEB_TXT_LEN / 2u]; } web_txt_t;
+static web_txt_t web_tx[WEB_TXT_MAX], web_tp[WEB_TXT_MAX];
+static uint32_t web_tn, web_tpn;
+static int32_t web_ox, web_oy;
+#define WEB_TXT_BEGIN() (web_tpn = 0)
+#define WEB_TXT_BLIT(x, y, r0) (web_ox = (int32_t)(x), web_oy = (int32_t)(y))
+#define WEB_TXT_DRAW(x, y, f, s, fg, bg, pen) web_txt_note((x), (y), (f), (s), (fg), (bg), (pen))
+#define WEB_ARC_DRAW(x, y, r, lo, hi, tr, vc, bg) web_arc_note((x), (y), (r), (lo), (hi), (tr), (vc), (bg))
+static void web_arc_note(int32_t x, int32_t y, int32_t r, int32_t lo, int32_t hi, uint16_t tr, uint16_t vc, uint16_t bg);
+#define WEB_RING_DRAW(cx, cy, ratio, fill, track, arc, body) web_ring_note((cx), (cy), (ratio), (fill), (track), (arc), (body))
+static void web_ring_note(int32_t cx, int32_t cy, int32_t ratio, uint16_t fill, uint16_t track, uint16_t arc, uint16_t body);
+struct aafont_fwd;
+static void web_txt_note(int32_t x, int32_t y, const void *f, const char *s, uint16_t fg, uint16_t bg, int32_t pen);
 /* ((Vibe 1.2) the editor's own, finer drawing of the scope's bars) the waveform's data as sk_wave (ui_graph.c) made it, kept
  * while its picture is what the screen shows there: the page paints the bars again at its display's resolution over it.
  * ws[0..7]: valid, canvas y on the screen, canvas height, the middle line, half height, first bar x, colour, background
@@ -159,6 +181,9 @@ static int32_t web_ws[8 + 36], web_wp[8 + 36];   /* shown, pending (drawn into t
 static uint32_t web_wp_on;
 #define WEB_SCOPE_HOOK(c, cy, half, x0, lv) web_scope_note((c), (cy), (half), (x0), (lv))
 static void web_scope_note(uint16_t c, int32_t cy, int32_t half, int32_t x0, const int16_t *lv);   /* (below, after ui.c) */
+static void web_txt_sent(int32_t x, int32_t y, int32_t w, int32_t h, int take);
+static void web_txt_sent_fill(int32_t x, int32_t y, int32_t w, int32_t h) { web_txt_sent(x, y, w, h, 0); }
+static void web_txt_sent_blit(int32_t x, int32_t y, int32_t w, int32_t h) { web_txt_sent(x, y, w, h, 1); }
 static void web_scope_sent(uint32_t y, uint32_t h)       /* a piece goes to the panel: the scope's own canvas shows it, any other that covers it hides it */
 {
     if (web_wp_on && (int32_t)y == web_wp[1] && (int32_t)h == web_wp[2]) {
@@ -175,6 +200,7 @@ static void lcd_fill(uint32_t x, uint32_t y, uint32_t w, uint32_t h, uint16_t c)
     CAST(cast_px(x | y << 8 | w << 16 | h << 24, c, 0, 0u));   /* ((Skiff Studio) as the unit's lcd.c) */
     WEB_LCD_HOOK(w * h);
     web_scope_sent(y, h);
+    web_txt_sent_fill((int32_t)x, (int32_t)y, (int32_t)w, (int32_t)h);
     for (j = 0; j < h && y + j < 240u; j++)
         for (i = 0; i < w && x + i < 240u; i++)
             web_fb[(y + j) * 240u + x + i] = sw;
@@ -189,6 +215,7 @@ static void lcd_blit(uint32_t x, uint32_t y, uint32_t w, uint32_t h, const uint1
     CAST(cast_px(x | y << 8 | w << 16 | h << 24, 0u, p, w * h));
     WEB_LCD_HOOK(w * h);
     web_scope_sent(y, h);
+    web_txt_sent_blit((int32_t)x, (int32_t)y, (int32_t)w, (int32_t)h);
     web_draws++;
 }
 static void lcd_sync(void) {}
@@ -197,6 +224,7 @@ static void lcd_power(uint32_t s)              /* MENU > SCREEN OFF (lcd.c): off
     if (!s) {
         memset(web_fb, 0, sizeof web_fb);
         web_ws[0] = 0;
+        web_tn = 0;
         web_draws++;
     }
 }
@@ -211,6 +239,95 @@ static int smk_trim_load(const uint8_t *rec) { (void)rec; return 0; }
 #endif
 
 #include "../../firmware/src/gfx.c"
+static void web_txt_note(int32_t x, int32_t y, const void *fp, const char *s, uint16_t fg, uint16_t bg, int32_t pen)
+{
+    const aafont_t *f = fp;
+    uint32_t n = 0, i;
+    web_txt_t *t;
+    if (web_tpn >= WEB_TXT_MAX)
+        return;
+    while (s[n] && n <= WEB_TXT_LEN)
+        n++;
+    if (n == 0u || n > WEB_TXT_LEN)
+        return;                                       /* (a longer text stays the unit's pixels) */
+    for (i = 0; i < web_tpn; i++)                     /* the same place drawn again: the later one */
+        if (web_tp[i].w[4] == (int16_t)x && web_tp[i].w[5] == (int16_t)y && web_tp[i].w[8] == (f == &AF_S ? 0 : f == &AF_M ? 1 : f == &AF_L ? 2 : 3))
+            break;
+    t = &web_tp[i];
+    if (i == web_tpn)
+        web_tpn++;
+    t->w[0] = 0; t->w[1] = (int16_t)cv_cy0; t->w[2] = (int16_t)cv_w; t->w[3] = (int16_t)cv_cy1;   /* (canvas coordinates until sent) */
+    t->w[4] = (int16_t)x; t->w[5] = (int16_t)y; t->w[6] = (int16_t)fg; t->w[7] = (int16_t)bg;
+    t->w[8] = (int16_t)(f == &AF_S ? 0 : f == &AF_M ? 1 : f == &AF_L ? 2 : 3);
+    {   /* the ink's box: columns by text_run's measure, rows by the glyphs' own */
+        int32_t b[4], y0 = 0x7FFF, y1 = -0x7FFF;
+        const char *p;
+        text_ink(f, s, b);
+        for (p = s; *p; p++) {
+            const aag_t *g = &f->g[glyph(f, fold(f, (uint8_t)*p))];
+            if (g->bw && g->by < y0) y0 = g->by;
+            if (g->bw && g->by + g->bh > y1) y1 = g->by + g->bh;
+        }
+        if (b[2] <= b[0] || y1 <= y0) {               /* (blanks only: nothing to redraw) */
+            if (i == web_tpn - 1u) web_tpn--;
+            return;
+        }
+        t->w[9] = (int16_t)n; t->w[10] = (int16_t)b[0]; t->w[11] = (int16_t)f->asc; t->w[12] = (int16_t)y0; t->w[13] = (int16_t)y1;
+        t->w[14] = (int16_t)b[2]; t->w[15] = 0;
+    }
+    memset(&t->w[16], 0, WEB_TXT_LEN);
+    memcpy(&t->w[16], s, n);
+}
+static void web_arc_note(int32_t x, int32_t y, int32_t r, int32_t lo, int32_t hi, uint16_t tr, uint16_t vc, uint16_t bg)
+{
+    web_txt_t *t;
+    if (web_tpn >= WEB_TXT_MAX)
+        return;
+    t = &web_tp[web_tpn++];
+    memset(t, 0, sizeof *t);
+    t->w[0] = 0; t->w[1] = (int16_t)cv_cy0; t->w[2] = (int16_t)cv_w; t->w[3] = (int16_t)cv_cy1;
+    t->w[4] = (int16_t)x; t->w[5] = (int16_t)y; t->w[6] = (int16_t)tr; t->w[7] = (int16_t)bg;
+    t->w[8] = 100;                                    /* (kind: a knob's ring) */
+    t->w[9] = (int16_t)r; t->w[10] = (int16_t)lo; t->w[11] = (int16_t)hi; t->w[12] = (int16_t)vc;
+}
+static void web_ring_note(int32_t cx, int32_t cy, int32_t ratio, uint16_t fill, uint16_t track, uint16_t arc, uint16_t body)
+{
+    web_txt_t *t;
+    if (web_tpn >= WEB_TXT_MAX)
+        return;
+    t = &web_tp[web_tpn++];
+    memset(t, 0, sizeof *t);
+    t->w[0] = 0; t->w[1] = (int16_t)cv_cy0; t->w[2] = (int16_t)cv_w; t->w[3] = (int16_t)cv_cy1;
+    t->w[4] = (int16_t)cx; t->w[5] = (int16_t)cy; t->w[6] = (int16_t)track; t->w[7] = (int16_t)fill;
+    t->w[8] = 101;                                    /* (kind: a STYLE BLOCKS knob) */
+    t->w[9] = (int16_t)body; t->w[10] = (int16_t)ratio; t->w[12] = (int16_t)arc;
+}
+static void web_txt_sent(int32_t x, int32_t y, int32_t w, int32_t h, int take)   /* a piece reaches the panel (take: a canvas, with its texts) */
+{
+    uint32_t i, k = 0;
+    for (i = 0; i < web_tn; i++) {                    /* what it covers loses its text */
+        const int16_t *q = web_tx[i].w;
+        if (!(q[0] < x + w && q[2] > x && q[1] < y + h && q[3] > y))
+            web_tx[k++] = web_tx[i];
+    }
+    web_tn = k;
+    if (take && web_tpn) {
+        for (i = 0; i < web_tpn && web_tn < WEB_TXT_MAX; i++) {
+            web_txt_t t = web_tp[i];
+            int32_t x0 = t.w[0] + web_ox, y0 = t.w[1] + web_oy, x1 = t.w[2] + web_ox, y1 = t.w[3] + web_oy;
+            if (x0 < x) x0 = x;
+            if (y0 < y) y0 = y;
+            if (x1 > x + w) x1 = x + w;
+            if (y1 > y + h) y1 = y + h;
+            if (x1 <= x0 || y1 <= y0)
+                continue;
+            t.w[0] = (int16_t)x0; t.w[1] = (int16_t)y0; t.w[2] = (int16_t)x1; t.w[3] = (int16_t)y1;
+            t.w[4] += (int16_t)web_ox; t.w[5] += (int16_t)web_oy;
+            web_tx[web_tn++] = t;
+        }
+        web_tpn = 0;
+    }
+}
 #include "../../firmware/src/panel.c"
 #include "../../firmware/src/ui.c"
 #include "../../firmware/src/menu_items.c"
@@ -675,6 +792,8 @@ EXPORT uint32_t web_test_user_preset(uint32_t i) { return (uint32_t)up_used(i); 
 
 EXPORT uint16_t *web_screen(void) { return web_fb; }
 EXPORT uint32_t web_screen_draws(void) { return web_draws; }
+EXPORT uint32_t web_text_n(void) { return web_tn; }   /* ((Vibe 1.2) the HD text: see web_txt_note) */
+EXPORT void *web_text_ptr(void) { return web_tx; }
 EXPORT int32_t *web_scope_data(void) { return web_ws; }   /* ((Vibe 1.2) see web_scope_note) */
 EXPORT uint32_t web_now_ms(void) { return fm1_ms; }
 EXPORT uint32_t web_playing(void) { return song.playing; }
